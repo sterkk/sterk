@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Kaydedilenler{% endblock %}
+{% block extra_style %}
+.bm-wrap{max-width:680px;margin:0 auto;padding:2rem 1rem;}
+{% endblock %}
+{% block content %}
+<div class="bm-wrap">
+    <h1 style="font-size:1.4rem;margin-bottom:1.5rem">🔖 Kaydedilenler</h1>
+    {% if posts %}
+    {% for post in posts %}
+    <div class="post-card" id="post-{{ post.id }}">
+        <div class="post-header">
+            <a href="/profile/{{ post.username }}"><div class="avatar avatar-md" style="background:{{ post.avatar_color }}">{{ (post.full_name or post.username)[0].upper() }}</div></a>
+            <div class="post-user-info">
+                <strong><a href="/profile/{{ post.username }}" style="color:var(--text)">{{ post.full_name or post.username }}</a>{% if post.is_verified %}<span class="verified">✓</span>{% endif %}</strong>
+                <span>@{{ post.username }} · {{ time_ago(post.created_at) }}</span>
+            </div>
+        </div>
+        <div class="post-content">{{ post.content }}</div>
+        <div class="post-actions">
+            <button class="action-btn {% if post.liked %}liked{% endif %}" onclick="likePost({{ post.id }}, this)">
+                <span class="btn-emoji">{% if post.liked %}❤️{% else %}🤍{% endif %}</span>
+                <span class="btn-count">{{ post.like_count }}</span>
+            </button>
+            <button class="action-btn" onclick="toggleComments({{ post.id }})">💬 <span class="comment-count">{{ post.comment_count }}</span></button>
+            <button class="action-btn bookmarked" onclick="bookmarkPost({{ post.id }}, this)"><span class="btn-emoji">🔖</span></button>
+        </div>
+        <div class="comments-area" id="comments-{{ post.id }}">
+            <div class="comment-list"></div>
+            <div style="display:flex;gap:0.6rem;margin-top:0.8rem">
+                <input class="comment-input" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.83rem;padding:0.5rem 0.8rem;outline:none" placeholder="Yorum yaz..." onkeydown="if(event.key==='Enter')submitComment({{ post.id }})">
+                <button class="btn btn-primary btn-sm" onclick="submitComment({{ post.id }})">↑</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:4rem;color:var(--muted)">
+        <div style="font-size:3rem;margin-bottom:1rem">🔖</div>
+        <p>Henüz kaydettiğin gönderi yok.<br>Gönderilerin üzerindeki 🏷️ simgesine tıkla.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

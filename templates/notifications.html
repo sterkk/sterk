@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Bildirimler{% endblock %}
+{% block extra_style %}
+.notif-wrap{max-width:640px;margin:0 auto;padding:2rem 1rem;}
+.notif-card{display:flex;align-items:flex-start;gap:0.9rem;padding:1rem 1.2rem;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:0.6rem;transition:all 0.2s;}
+.notif-card:hover{border-color:var(--border2);}
+.notif-card.unread{border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.04);}
+.notif-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:var(--surface);}
+.notif-body{flex:1;min-width:0;}
+.notif-body strong{font-size:0.88rem;}
+.notif-body p{font-size:0.82rem;color:var(--text2);margin-top:0.15rem;}
+.notif-body .preview{font-size:0.8rem;color:var(--muted);margin-top:0.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;}
+.notif-time{font-size:0.72rem;color:var(--muted);white-space:nowrap;}
+.empty-state{text-align:center;padding:4rem;color:var(--muted);}
+{% endblock %}
+{% block content %}
+<div class="notif-wrap">
+    <h1 style="font-size:1.4rem;margin-bottom:1.5rem">🔔 Bildirimler</h1>
+    {% if notifs %}
+    {% for n in notifs %}
+    <div class="notif-card {% if not n.is_read %}unread{% endif %}">
+        <a href="/profile/{{ n.username }}">
+            <div class="avatar avatar-sm" style="background:{{ n.avatar_color }}">{{ (n.full_name or n.username)[0].upper() }}</div>
+        </a>
+        <div class="notif-body">
+            <strong><a href="/profile/{{ n.username }}" style="color:var(--accent)">@{{ n.username }}</a>
+            {% if n.type == 'like' %} gönderini beğendi ❤️
+            {% elif n.type == 'comment' %} gönderine yorum yaptı 💬
+            {% elif n.type == 'follow' %} seni takip etmeye başladı 👤
+            {% elif n.type == 'repost' %} gönderini repost etti 🔁
+            {% elif n.type == 'message' %} sana mesaj gönderdi 💌
+            {% else %} bildirim gönderdi{% endif %}
+            </strong>
+            {% if n.post_content %}
+            <div class="preview">{{ n.post_content[:80] }}...</div>
+            {% endif %}
+        </div>
+        <div class="notif-time">{{ time_ago(n.created_at) }}</div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div style="font-size:3rem;margin-bottom:1rem">🔔</div>
+        <p>Henüz bildiriminiz yok.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

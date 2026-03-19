@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Mesajlar{% endblock %}
+{% block extra_style %}
+.msg-wrap{max-width:700px;margin:0 auto;padding:2rem 1rem;}
+.convo-card{display:flex;align-items:center;gap:0.9rem;padding:1rem 1.2rem;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:0.6rem;text-decoration:none;color:var(--text);transition:all 0.2s;}
+.convo-card:hover{border-color:rgba(99,102,241,0.3);transform:translateX(2px);}
+.convo-info{flex:1;min-width:0;}
+.convo-info strong{font-size:0.9rem;display:flex;align-items:center;justify-content:space-between;}
+.convo-info p{font-size:0.8rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:0.15rem;}
+.convo-time{font-size:0.72rem;color:var(--muted);}
+.unread-badge{background:var(--accent3);color:white;border-radius:10px;font-size:0.65rem;font-weight:700;padding:2px 6px;}
+.new-msg-btn{background:var(--gradient);color:white;border:none;border-radius:12px;padding:0.6rem 1.2rem;font-family:'Syne',sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:0.4rem;}
+{% endblock %}
+{% block content %}
+<div class="msg-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <h1 style="font-size:1.4rem">💬 Mesajlar</h1>
+        <button class="new-msg-btn" onclick="openNewMsg()">+ Yeni Mesaj</button>
+    </div>
+    {% if convos %}
+    {% for c in convos %}
+    <a href="/messages/{{ c.username }}" class="convo-card">
+        <div class="avatar avatar-md" style="background:{{ c.avatar_color }}">{{ (c.full_name or c.username)[0].upper() }}</div>
+        <div class="convo-info">
+            <strong>{{ c.full_name or c.username }}
+                {% if c.unread %}<span class="unread-badge">{{ c.unread }}</span>{% endif %}
+            </strong>
+            <p>{{ c.last_msg or 'Konuşma başlat' }}</p>
+        </div>
+        <div class="convo-time">{{ time_ago(c.last_time) }}</div>
+    </a>
+    {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:4rem;color:var(--muted)">
+        <div style="font-size:3rem;margin-bottom:1rem">💬</div>
+        <p>Henüz mesajınız yok.<br>Bir kullanıcının profiline gidip mesaj gönderin.</p>
+    </div>
+    {% endif %}
+</div>
+<!-- New Message Modal -->
+<div class="modal-overlay" id="newMsgModal">
+    <div class="modal" style="max-width:400px">
+        <div class="modal-header"><h3 style="font-size:1rem">💬 Yeni Mesaj</h3><button class="modal-close" onclick="closeModal('newMsgModal')">✕</button></div>
+        <div class="field">
+            <label>Kullanıcı adı</label>
+            <input id="newMsgUser" class="input" placeholder="@kullaniciadi">
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="goToConvo()">Git →</button>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function openNewMsg() { openModal('newMsgModal'); }
+function goToConvo() {
+    const u = document.getElementById('newMsgUser').value.trim().replace('@','');
+    if (u) window.location.href = `/messages/${u}`;
+}
+</script>
+{% endblock %}

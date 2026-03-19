@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Ayarlar{% endblock %}
+{% block extra_style %}
+.settings-wrap{max-width:600px;margin:0 auto;padding:2rem 1rem;}
+.settings-section{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1.2rem;}
+.settings-section h3{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:1.2rem;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.setting-row:last-child{border:none;}
+.setting-label strong{font-size:0.88rem;display:block;}
+.setting-label span{font-size:0.78rem;color:var(--text2);}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--border);border:none;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:var(--accent);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:white;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(20px);}
+{% endblock %}
+{% block content %}
+<div class="settings-wrap">
+    <h1 style="font-size:1.4rem;margin-bottom:1.5rem">⚙️ Ayarlar</h1>
+    <div class="settings-section">
+        <h3>Bildirimler</h3>
+        <div class="setting-row">
+            <div class="setting-label"><strong>E-posta Bildirimleri</strong><span>Yeni takipçi ve etkileşimler</span></div>
+            <button class="toggle {% if not settings or settings.email_notifs %}on{% endif %}" id="t-email" onclick="toggleSetting(this, 'email_notifs')"></button>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><strong>Push Bildirimleri</strong><span>Anlık bildirimler</span></div>
+            <button class="toggle {% if not settings or settings.push_notifs %}on{% endif %}" id="t-push" onclick="toggleSetting(this, 'push_notifs')"></button>
+        </div>
+    </div>
+    <div class="settings-section">
+        <h3>Gizlilik</h3>
+        <div class="setting-row">
+            <div class="setting-label"><strong>Çevrimiçi Durumu Göster</strong><span>Diğerleri çevrimiçi olduğunu görebilir</span></div>
+            <button class="toggle {% if not settings or settings.show_online %}on{% endif %}" id="t-online" onclick="toggleSetting(this, 'show_online')"></button>
+        </div>
+    </div>
+    <div class="settings-section">
+        <h3>Görünüm</h3>
+        <div class="setting-row">
+            <div class="setting-label"><strong>Tema</strong><span>Koyu veya açık mod</span></div>
+            <button class="btn btn-ghost btn-sm" onclick="toggleTheme()">🌙 Değiştir</button>
+        </div>
+    </div>
+    <div class="settings-section">
+        <h3>Hesap</h3>
+        <div class="setting-row">
+            <div class="setting-label"><strong>Profili Düzenle</strong><span>Ad, biyografi, kategoriler</span></div>
+            <a href="/edit_profile" class="btn btn-ghost btn-sm">Düzenle</a>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><strong>Çıkış Yap</strong><span>Oturumu kapat</span></div>
+            <a href="/logout" class="btn btn-danger btn-sm">Çıkış</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const settings = { email_notifs: {{ (settings.email_notifs if settings else 1)|int }}, push_notifs: {{ (settings.push_notifs if settings else 1)|int }}, show_online: {{ (settings.show_online if settings else 1)|int }}, theme: '{{ (settings.theme if settings else "dark") }}' };
+async function toggleSetting(btn, key) {
+    btn.classList.toggle('on');
+    settings[key] = btn.classList.contains('on') ? 1 : 0;
+    await fetch('/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(settings)});
+    showToast('Ayar kaydedildi', 'success');
+}
+</script>
+{% endblock %}

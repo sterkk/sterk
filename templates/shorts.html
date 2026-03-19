@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}Shorts{% endblock %}
+{% block content %}
+<style>
+.shorts-wrap{display:flex;gap:1.2rem;max-width:1100px;margin:0 auto;padding:1rem;}
+.shorts-main{flex:1;min-width:0;}
+.shorts-sidebar{width:300px;flex-shrink:0;}
+
+/* Upload card */
+.upload-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1.2rem;}
+.upload-card h3{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;margin-bottom:0.8rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
+.upload-zone:hover{border-color:var(--accent);background:rgba(124,58,237,0.04);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-zone .icon{font-size:2rem;margin-bottom:0.5rem;}
+.upload-zone p{font-size:0.8rem;color:var(--text2);}
+.cap-input{width:100%;padding:0.5rem 0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;margin-top:0.7rem;}
+.cap-input:focus{border-color:var(--accent);}
+.up-btn{width:100%;padding:0.55rem;background:var(--grad);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;margin-top:0.7rem;transition:opacity 0.2s;}
+.up-btn:hover{opacity:0.85;}
+.up-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.vid-preview{width:100%;border-radius:10px;max-height:180px;object-fit:cover;margin-top:0.7rem;display:none;}
+
+/* Shorts grid */
+.shorts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;}
+.short-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform 0.2s,border-color 0.2s;cursor:pointer;position:relative;}
+.short-card:hover{transform:translateY(-3px);border-color:var(--border2);}
+.short-video-wrap{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden;}
+.short-video-wrap video{width:100%;height:100%;object-fit:cover;}
+.short-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,0.7) 0%,transparent 50%);pointer-events:none;}
+.short-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;background:rgba(255,255,255,0.15);backdrop-filter:blur(6px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all 0.2s;}
+.short-card:hover .short-play{background:rgba(124,58,237,0.5);transform:translate(-50%,-50%) scale(1.1);}
+.short-info{position:absolute;bottom:0;left:0;right:0;padding:0.8rem;}
+.short-caption{font-size:0.75rem;color:white;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;margin-bottom:0.4rem;}
+.short-meta{display:flex;align-items:center;gap:0.5rem;}
+.short-av{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:white;flex-shrink:0;overflow:hidden;}
+.short-av img{width:100%;height:100%;object-fit:cover;}
+.short-user{font-size:0.72rem;color:rgba(255,255,255,0.85);font-weight:600;}
+.short-stats{display:flex;gap:0.8rem;margin-left:auto;}
+.short-stat{display:flex;align-items:center;gap:0.2rem;font-size:0.7rem;color:rgba(255,255,255,0.75);}
+.view-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);color:rgba(255,255,255,0.85);font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:20px;}
+
+/* Empty state */
+.empty-shorts{text-align:center;padding:3rem 1rem;color:var(--text2);}
+.empty-shorts .ei{font-size:3rem;margin-bottom:0.8rem;}
+.empty-shorts h3{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text);margin-bottom:0.4rem;}
+
+/* Modal */
+.smodal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:1000;align-items:center;justify-content:center;}
+.smodal.open{display:flex;}
+.smodal-inner{display:flex;gap:0;max-height:95vh;max-width:800px;width:100%;}
+.smodal-video-side{flex:0 0 360px;position:relative;background:#000;border-radius:16px 0 0 16px;overflow:hidden;}
+.smodal-video-side video{width:100%;height:100%;object-fit:cover;}
+.smodal-close{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);border:none;color:white;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;z-index:2;}
+.smodal-info-side{flex:1;background:var(--card);border-radius:0 16px 16px 0;display:flex;flex-direction:column;max-height:95vh;overflow:hidden;}
+.smodal-header{padding:1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.7rem;}
+.smodal-body{flex:1;overflow-y:auto;padding:1rem;}
+.smodal-footer{padding:0.8rem 1rem;border-top:1px solid var(--border);display:flex;gap:0.5rem;}
+.smodal-footer input{flex:1;padding:0.5rem 0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;}
+.smodal-footer input:focus{border-color:var(--accent);}
+.smodal-footer button{padding:0.5rem 0.9rem;background:var(--grad);color:white;border:none;border-radius:10px;cursor:pointer;font-size:0.82rem;font-weight:600;}
+.sm-actions{display:flex;gap:0.6rem;margin-top:0.8rem;}
+.sm-btn{padding:0.4rem 0.9rem;border-radius:10px;border:1px solid var(--border);background:none;color:var(--text2);font-size:0.8rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:0.35rem;}
+.sm-btn:hover,.sm-btn.liked{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444;}
+.comment-item{display:flex;gap:0.6rem;margin-bottom:0.7rem;}
+.c-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:white;overflow:hidden;}
+.c-av img{width:100%;height:100%;object-fit:cover;}
+.c-body strong{font-size:0.78rem;color:var(--text);}
+.c-body p{font-size:0.8rem;color:var(--text2);margin-top:0.1rem;line-height:1.4;}
+
+@media(max-width:700px){
+.shorts-wrap{flex-direction:column;}
+.shorts-sidebar{width:100%;}
+.shorts-grid{grid-template-columns:repeat(2,1fr);}
+.smodal-inner{flex-direction:column;max-width:380px;}
+.smodal-video-side{flex:none;height:55vh;border-radius:16px 16px 0 0;}
+.smodal-info-side{border-radius:0 0 16px 16px;max-height:35vh;}
+}
+</style>
+
+<div class="shorts-wrap">
+  <!-- Sol: Grid -->
+  <div class="shorts-main">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h2 style="font-family:'Syne',sans-serif;font-weight:900;font-size:1.3rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">▶ Shorts</h2>
+      <span style="font-size:0.78rem;color:var(--text2);">{{ shorts|length }} video</span>
+    </div>
+
+    {% if shorts %}
+    <div class="shorts-grid" id="shortsGrid">
+      {% for s in shorts %}
+      <div class="short-card" onclick="openModal({{ loop.index0 }})">
+        <div class="short-video-wrap">
+          <video src="/uploads/{{ s.video_url }}" preload="metadata" muted></video>
+          <div class="short-overlay"></div>
+          <div class="short-play">▶</div>
+          <span class="view-badge">👁 {{ s.view_count }}</span>
+          <div class="short-info">
+            {% if s.caption %}
+            <p class="short-caption">{{ s.caption }}</p>
+            {% endif %}
+            <div class="short-meta">
+              <div class="short-av" style="background:{{ s.avatar_color }}">
+                {% if s.avatar %}<img src="/uploads/{{ s.avatar }}">{% else %}{{ s.full_name[0] if s.full_name else s.username[0] }}{% endif %}
+              </div>
+              <span class="short-user">@{{ s.username }}</span>
+              <div class="short-stats">
+                <span class="short-stat">❤ {{ s.like_count }}</span>
+                <span class="short-stat">💬 {{ s.comment_count }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-shorts">
+      <div class="ei">🎬</div>
+      <h3>Henüz short yok</h3>
+      <p>İlk videoyu sen paylaş!</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sağ: Upload -->
+  <div class="shorts-sidebar">
+    <div class="upload-card">
+      <h3>🎬 Short Yükle</h3>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" accept="video/mp4,video/mov,video/webm" id="videoFile" onchange="previewVid(this)">
+        <div class="icon">📱</div>
+        <p>Video seç veya sürükle<br><span style="font-size:0.7rem;color:var(--muted)">MP4, MOV · Maks 64MB</span></p>
+      </div>
+      <video id="vidPreview" class="vid-preview" controls></video>
+      <input class="cap-input" id="caption" placeholder="Açıklama ekle... #etiket" maxlength="200">
+      <button class="up-btn" id="upBtn" onclick="uploadShort()" disabled>▶ Yükle</button>
+    </div>
+
+    <!-- Shortcuts -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;">
+      <p style="font-size:0.78rem;font-weight:700;color:var(--text2);margin-bottom:0.7rem;">💡 Hızlı Erişim</p>
+      <a href="/feed" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;text-decoration:none;color:var(--text2);font-size:0.82rem;border-bottom:1px solid rgba(255,255,255,0.04);">🏠 Ana Akış</a>
+      <a href="/live" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;text-decoration:none;color:var(--text2);font-size:0.82rem;border-bottom:1px solid rgba(255,255,255,0.04);">🔴 Canlı Yayınlar</a>
+      <a href="/explore" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;text-decoration:none;color:var(--text2);font-size:0.82rem;">🔭 Keşfet</a>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="smodal" id="shortModal">
+  <div class="smodal-inner">
+    <div class="smodal-video-side">
+      <button class="smodal-close" onclick="closeModal()">✕</button>
+      <video id="modalVid" controls autoplay loop style="width:100%;height:100%;object-fit:cover;"></video>
+    </div>
+    <div class="smodal-info-side">
+      <div class="smodal-header">
+        <div id="mAvatar" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:700;color:white;overflow:hidden;flex-shrink:0;"></div>
+        <div>
+          <div id="mUsername" style="font-size:0.85rem;font-weight:700;color:var(--text);"></div>
+          <div id="mTime" style="font-size:0.72rem;color:var(--text2);"></div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:0.4rem;">
+          <button onclick="prevShort()" style="padding:0.3rem 0.6rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;font-size:0.8rem;">‹</button>
+          <button onclick="nextShort()" style="padding:0.3rem 0.6rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;font-size:0.8rem;">›</button>
+        </div>
+      </div>
+      <div class="smodal-body">
+        <p id="mCaption" style="font-size:0.85rem;color:var(--text);line-height:1.5;margin-bottom:0.5rem;"></p>
+        <div class="sm-actions">
+          <button class="sm-btn" id="mLikeBtn" onclick="likeShort()">❤ <span id="mLikeCount">0</span></button>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:0.8rem 0;">
+        <div id="mComments"></div>
+      </div>
+      <div class="smodal-footer">
+        <input id="mComInput" placeholder="Yorum yaz..." onkeydown="if(event.key==='Enter')sendComment()">
+        <button onclick="sendComment()">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHORTS = {{ shorts | tojson }};
+let cur = -1;
+
+function previewVid(inp){
+  const f=inp.files[0]; if(!f) return;
+  const vid=document.getElementById('vidPreview');
+  vid.src=URL.createObjectURL(f);
+  vid.style.display='block';
+  document.getElementById('upBtn').disabled=false;
+  document.getElementById('uploadZone').style.borderColor='var(--accent)';
+}
+
+async function uploadShort(){
+  const f=document.getElementById('videoFile').files[0]; if(!f) return;
+  const btn=document.getElementById('upBtn');
+  btn.disabled=true; btn.textContent='Yükleniyor...';
+  const fd=new FormData();
+  fd.append('video',f);
+  fd.append('caption',document.getElementById('caption').value);
+  try{
+    const r=await fetch('/shorts/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.success){showToast('Short yüklendi!','success');setTimeout(()=>location.reload(),800);}
+    else{showToast(d.error||'Hata','error');btn.disabled=false;btn.textContent='▶ Yükle';}
+  }catch(e){showToast('Bağlantı hatası','error');btn.disabled=false;btn.textContent='▶ Yükle';}
+}
+
+function openModal(idx){
+  cur=idx;
+  document.getElementById('shortModal').classList.add('open');
+  loadShort(idx);
+  fetch('/shorts/view/'+SHORTS[idx].id,{method:'POST'});
+}
+
+function closeModal(){
+  document.getElementById('shortModal').classList.remove('open');
+  const v=document.getElementById('modalVid'); v.pause(); v.src='';
+}
+
+function prevShort(){ if(cur>0){ cur--; loadShort(cur); }}
+function nextShort(){ if(cur<SHORTS.length-1){ cur++; loadShort(cur); }}
+
+function loadShort(idx){
+  const s=SHORTS[idx];
+  const v=document.getElementById('modalVid');
+  v.src='/uploads/'+s.video_url; v.play();
+  const av=document.getElementById('mAvatar');
+  if(s.avatar){ av.innerHTML=`<img src="/uploads/${s.avatar}" style="width:100%;height:100%;object-fit:cover;">`; }
+  else{ av.style.background=s.avatar_color; av.textContent=(s.full_name||s.username)[0].toUpperCase(); }
+  document.getElementById('mUsername').textContent='@'+s.username;
+  document.getElementById('mCaption').textContent=s.caption||'';
+  document.getElementById('mLikeCount').textContent=s.like_count;
+  document.getElementById('mLikeBtn').className='sm-btn'+(s.liked?' liked':'');
+  loadComments(s.id);
+}
+
+async function loadComments(sid){
+  const el=document.getElementById('mComments');
+  el.innerHTML='<p style="font-size:0.78rem;color:var(--text2);">Yorumlar yükleniyor...</p>';
+  try{
+    const r=await fetch('/shorts/'+sid+'/comments');
+    const d=await r.json();
+    if(!d.length){el.innerHTML='<p style="font-size:0.78rem;color:var(--muted);">Henüz yorum yok. İlk yorumu sen yap!</p>';return;}
+    el.innerHTML=d.map(c=>`
+      <div class="comment-item">
+        <div class="c-av" style="background:${c.avatar_color}">
+          ${c.avatar?`<img src="/uploads/${c.avatar}" style="width:100%;height:100%;object-fit:cover;">`:(c.username[0]||'?').toUpperCase()}
+        </div>
+        <div class="c-body"><strong>@${c.username}</strong><p>${c.content}</p></div>
+      </div>`).join('');
+  }catch(e){el.innerHTML='';}
+}
+
+async function likeShort(){
+  const s=SHORTS[cur];
+  const r=await fetch('/shorts/like/'+s.id,{method:'POST'});
+  const d=await r.json();
+  SHORTS[cur].liked=d.liked; SHORTS[cur].like_count=d.count;
+  document.getElementById('mLikeCount').textContent=d.count;
+  document.getElementById('mLikeBtn').className='sm-btn'+(d.liked?' liked':'');
+}
+
+async function sendComment(){
+  const inp=document.getElementById('mComInput');
+  const txt=inp.value.trim(); if(!txt) return;
+  const s=SHORTS[cur];
+  inp.value='';
+  const r=await fetch('/shorts/comment/'+s.id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:txt})});
+  const d=await r.json();
+  if(d.success){
+    SHORTS[cur].comment_count=(SHORTS[cur].comment_count||0)+1;
+    loadComments(s.id);
+  }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('shortModal').classList.contains('open')){
+    if(e.key==='Escape') closeModal();
+    if(e.key==='ArrowLeft') prevShort();
+    if(e.key==='ArrowRight') nextShort();
+  }
+});
+</script>
+{% endblock %}

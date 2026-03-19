@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{% block title %}Sterk{% endblock %} — Sterk</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#04040d;--surface:#0a0a18;--card:#0f0f1e;--border:#1a1a2e;--border2:#252545;--accent:#7c3aed;--accent2:#a855f7;--accent3:#c084fc;--text:#e2e8f0;--text2:#94a3b8;--muted:#4a5568;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--grad:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);}
+[data-theme="light"]{--bg:#f1f5f9;--surface:#fff;--card:#fff;--border:#e2e8f0;--border2:#cbd5e1;--text:#1e293b;--text2:#475569;--muted:#94a3b8;}
+*{margin:0;padding:0;box-sizing:border-box;} html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+h1,h2,h3,h4,h5{font-family:'Syne',sans-serif;} a{color:inherit;text-decoration:none;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+/* NAV */
+nav{position:sticky;top:0;z-index:200;height:62px;background:rgba(4,4,13,0.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.2rem;gap:0.6rem;}
+[data-theme="light"] nav{background:rgba(241,245,249,0.95);}
+.nav-logo{display:flex;align-items:center;gap:0.5rem;text-decoration:none;margin-right:0.5rem;}
+.nav-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;font-size:1rem;color:white;flex-shrink:0;box-shadow:0 3px 12px rgba(124,58,237,0.4);}
+.nav-logo-text{font-family:'Syne',sans-serif;font-weight:900;font-size:1.15rem;letter-spacing:0.07em;background:linear-gradient(135deg,#c084fc,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-search{flex:1;max-width:280px;display:flex;align-items:center;gap:0.4rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.4rem 0.8rem;transition:border-color 0.2s;}
+.nav-search:focus-within{border-color:var(--accent);}
+.nav-search input{background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.83rem;width:100%;}
+.nav-search input::placeholder{color:var(--muted);}
+.nav-links{display:flex;align-items:center;gap:0.15rem;margin-left:auto;}
+.nav-btn{position:relative;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.2s;cursor:pointer;text-decoration:none;background:none;border:none;font-size:1.05rem;}
+.nav-btn:hover{background:var(--border);color:var(--text);}
+.nav-btn.active{background:rgba(99,102,241,0.15);color:var(--accent);}
+.badge{position:absolute;top:5px;right:5px;background:var(--accent3);color:white;border-radius:9px;font-size:0.58rem;font-weight:700;padding:1px 4px;min-width:15px;text-align:center;border:2px solid var(--bg);}
+.nav-avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;color:white;cursor:pointer;flex-shrink:0;overflow:hidden;}
+.nav-avatar img{width:100%;height:100%;object-fit:cover;}
+/* DROPDOWN */
+.dropdown{position:relative;}
+.dropdown-menu{position:absolute;right:0;top:calc(100%+8px);background:var(--card);border:1px solid var(--border);border-radius:16px;padding:0.5rem;min-width:210px;box-shadow:0 20px 60px rgba(0,0,0,0.6);opacity:0;visibility:hidden;transform:translateY(-8px);transition:all 0.2s;z-index:300;}
+.dropdown:hover .dropdown-menu{opacity:1;visibility:visible;transform:translateY(0);}
+.dd-item{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.8rem;border-radius:9px;color:var(--text2);font-size:0.83rem;transition:all 0.15s;cursor:pointer;border:none;background:none;width:100%;font-family:'DM Sans',sans-serif;text-decoration:none;}
+.dd-item:hover{background:var(--border);color:var(--text);}
+.dd-item.danger{color:var(--danger);}
+.dd-item.danger:hover{background:rgba(239,68,68,0.1);}
+.dd-div{height:1px;background:var(--border);margin:0.3rem 0;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1.1rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.85rem;cursor:pointer;transition:all 0.2s;border:none;text-decoration:none;white-space:nowrap;}
+.btn-primary{background:var(--grad);color:white;box-shadow:0 4px 15px rgba(99,102,241,0.3);}
+.btn-primary:hover{opacity:0.85;transform:translateY(-1px);}
+.btn-ghost{background:var(--surface);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);}
+.btn-sm{padding:0.28rem 0.7rem;font-size:0.78rem;border-radius:8px;}
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;}
+/* AVATAR */
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:white;flex-shrink:0;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.av-sm{width:34px;height:34px;font-size:0.85rem;}
+.av-md{width:44px;height:44px;font-size:1rem;}
+.av-lg{width:72px;height:72px;font-size:1.4rem;}
+.av-xl{width:96px;height:96px;font-size:1.8rem;}
+/* POST */
+.post-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.2rem 1.3rem;margin-bottom:0.7rem;transition:border-color 0.2s;}
+.post-card:hover{border-color:var(--border2);}
+.post-header{display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;}
+.post-meta strong{font-size:0.9rem;display:flex;align-items:center;gap:0.3rem;}
+.post-meta span{font-size:0.73rem;color:var(--text2);}
+.post-content{font-size:0.9rem;line-height:1.65;word-break:break-word;margin-bottom:0.8rem;}
+.post-content a{color:var(--accent);}
+.post-img{width:100%;border-radius:12px;max-height:400px;object-fit:cover;margin-bottom:0.8rem;}
+.post-actions{display:flex;gap:0.2rem;}
+.act-btn{display:flex;align-items:center;gap:0.3rem;padding:0.32rem 0.6rem;border-radius:8px;background:none;border:none;color:var(--text2);font-size:0.78rem;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.act-btn:hover{background:var(--border);color:var(--text);}
+.act-btn.liked{color:#ec4899;}
+.act-btn.bookmarked{color:var(--warning);}
+.verified{color:#60a5fa;font-size:0.8em;}
+.online-dot{width:8px;height:8px;background:var(--success);border-radius:50%;display:inline-block;border:2px solid var(--card);}
+/* TAG */
+.tag-pill{display:inline-flex;align-items:center;gap:0.25rem;padding:0.22rem 0.6rem;border-radius:20px;font-size:0.7rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);color:#a5b4fc;}
+/* FORM */
+.field{margin-bottom:0.9rem;}
+.field label{display:block;font-size:0.78rem;color:var(--text2);margin-bottom:0.35rem;font-weight:500;}
+.input{width:100%;padding:0.6rem 0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s;}
+.input:focus{border-color:var(--accent);}
+.input::placeholder{color:var(--muted);}
+select.input option{background:#0f0f1e;}
+/* TOAST */
+#toast-container{position:fixed;bottom:2rem;right:2rem;z-index:999;display:flex;flex-direction:column;gap:0.5rem;}
+.toast{background:var(--card);border:1px solid var(--border);padding:0.75rem 1.1rem;border-radius:12px;font-size:0.83rem;transform:translateX(120%);transition:all 0.3s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:0.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.4);max-width:280px;}
+.toast.show{transform:translateX(0);}
+.toast.success{border-color:rgba(16,185,129,0.4);}
+.toast.error{border-color:rgba(239,68,68,0.4);}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;visibility:hidden;transition:all 0.2s;backdrop-filter:blur(4px);}
+.modal-overlay.open{opacity:1;visibility:visible;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:1.8rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:scale(0.9);transition:transform 0.2s;}
+.modal-overlay.open .modal{transform:scale(1);}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;}
+.modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.1rem;padding:0.3rem;border-radius:6px;}
+.modal-close:hover{background:var(--border);}
+/* COMMENTS */
+.comments-area{border-top:1px solid var(--border);margin-top:0.8rem;padding-top:0.8rem;display:none;}
+.comment-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;padding:0.45rem 0.75rem;outline:none;}
+.comment-input:focus{border-color:var(--accent);}
+/* XP BAR */
+.xp-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.xp-fill{height:100%;background:var(--grad);border-radius:2px;transition:width 0.5s;}
+/* HASHTAG */
+.hashtag{color:var(--accent);}
+.hashtag:hover{text-decoration:underline;}
+@media(max-width:640px){nav{padding:0 0.8rem;gap:0.4rem;}.nav-search{display:none;}.hide-m{display:none;}}
+{% block extra_style %}{% endblock %}
+</style>
+</head>
+<body>
+{% if session.get('user_id') %}
+<nav>
+  <a href="/feed" class="nav-logo">
+    <div class="nav-logo-icon">S</div>
+    <span class="nav-logo-text">STERK</span>
+  </a>
+  <form action="/search" method="GET" class="nav-search">
+    <span style="color:var(--muted);font-size:0.85rem">🔍</span>
+    <input name="q" placeholder="Ara..." value="{{ request.args.get('q','') }}" autocomplete="off">
+  </form>
+  <div class="nav-links">
+    <a href="/feed" class="nav-btn {% if request.endpoint=='feed' %}active{% endif %}" title="Ana Sayfa">🏠</a>
+    <a href="/shorts" class="nav-btn {% if request.endpoint=='shorts' %}active{% endif %}" title="Shorts">▶️</a>
+    <a href="/live" class="nav-btn {% if request.endpoint in ['live_list','watch_live'] %}active{% endif %}" title="Canlı Yayın">🔴</a>
+    <a href="/explore" class="nav-btn {% if request.endpoint=='explore' %}active{% endif %}" title="Keşfet">🔭</a>
+    <a href="/groups" class="nav-btn {% if request.endpoint=='groups' %}active{% endif %}" title="Gruplar">👥</a>
+    <a href="/events" class="nav-btn {% if request.endpoint=='events' %}active{% endif %}" title="Etkinlikler">📅</a>
+    <a href="/jobs" class="nav-btn {% if request.endpoint=='jobs' %}active{% endif %}" title="İş İlanları">💼</a>
+    <a href="/questions" class="nav-btn {% if request.endpoint=='questions' %}active{% endif %}" title="S&C">❓</a>
+    <a href="/leaderboard" class="nav-btn hide-m {% if request.endpoint=='leaderboard' %}active{% endif %}" title="Liderlik">🏆</a>
+    <a href="/messages" class="nav-btn {% if request.endpoint=='messages' %}active{% endif %}" title="Mesajlar">
+      💬{% if unread_msgs>0 %}<span class="badge">{{unread_msgs}}</span>{% endif %}
+    </a>
+    <a href="/notifications" class="nav-btn {% if request.endpoint=='notifications' %}active{% endif %}" title="Bildirimler">
+      🔔{% if unread_notifs>0 %}<span class="badge">{{unread_notifs}}</span>{% endif %}
+    </a>
+    <a href="/bookmarks" class="nav-btn {% if request.endpoint=='bookmarks' %}active{% endif %}" title="Kaydedilenler">🔖</a>
+    <div class="dropdown" style="margin-left:0.2rem">
+      <div class="nav-avatar" style="background:{{ session.get('avatar_color','#6366f1') }}">
+        {% if current_user_obj and current_user_obj.avatar %}
+        <img src="/uploads/{{ current_user_obj.avatar }}" alt="">
+        {% else %}{{ session.get('avatar_letter','?') }}{% endif %}
+      </div>
+      <div class="dropdown-menu">
+        <a href="/profile/{{ session.get('username','') }}" class="dd-item">👤 Profilim</a>
+        <a href="/edit_profile" class="dd-item">✏️ Profili Düzenle</a>
+        
+    {% if current_user_obj and current_user_obj.is_admin %}
+    <a href="/admin" class="nav-link {% if request.path=='/admin' %}active{% endif %}" title="Admin Paneli">🛡️</a>
+    {% endif %}
+
+    <a href="/settings" class="dd-item">⚙️ Ayarlar</a>
+        <a href="/leaderboard" class="dd-item">🏆 Liderlik Tablosu</a>
+        <div class="dd-div"></div>
+        <button class="dd-item" onclick="toggleTheme()">🌙 Tema Değiştir</button>
+        <div class="dd-div"></div>
+        <a href="/logout" class="dd-item danger">🚪 Çıkış Yap</a>
+      </div>
+    </div>
+  </div>
+</nav>
+{% endif %}
+{% block content %}{% endblock %}
+
+  <!-- Email doğrulama uyarısı -->
+  {% if current_user_obj and not current_user_obj.email_verified %}
+  <div style="background:rgba(245,158,11,0.08);border-bottom:1px solid rgba(245,158,11,0.2);padding:0.55rem 1rem;text-align:center;font-size:0.78rem;color:#f59e0b;display:flex;align-items:center;justify-content:center;gap:0.8rem;flex-wrap:wrap;">
+    <span>⚠️ E-posta adresiniz henüz doğrulanmadı. Gönderileriniz moderasyon onayı bekleyecek.</span>
+    <button onclick="resendVerification()" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#f59e0b;padding:0.2rem 0.7rem;font-size:0.75rem;cursor:pointer;" id="verifyBtn">Doğrulama Bağlantısı Al</button>
+  </div>
+  {% endif %}
+
+  <div id="toast-container"></div>
+<!-- STORY MODAL -->
+<div class="modal-overlay" id="storyModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hdr"><h3 style="font-size:0.95rem">📸 Hikaye Paylaş</h3><button class="modal-close" onclick="closeModal('storyModal')">✕</button></div>
+    <div id="storyPreview" style="height:160px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1rem;font-weight:600;background:#6366f1;color:white;padding:1rem;text-align:center;word-break:break-word;transition:background 0.3s">...</div>
+    <div class="field"><label>Metin</label><textarea id="storyContent" class="input" rows="2" maxlength="150" placeholder="Ne düşünüyorsun?" oninput="document.getElementById('storyPreview').textContent=this.value||'...'"></textarea></div>
+    <div class="field"><label>Renk</label><div style="display:flex;gap:0.4rem;flex-wrap:wrap">{% for c in ['#6366f1','#ec4899','#10b981','#f59e0b','#3b82f6','#8b5cf6','#ef4444','#06b6d4','#f97316'] %}<div onclick="document.getElementById('storyPreview').style.background='{{c}}';_storyBg='{{c}}'" style="width:26px;height:26px;border-radius:6px;background:{{c}};cursor:pointer"></div>{% endfor %}</div></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitStory()">Paylaş ✦</button>
+  </div>
+</div>
+<!-- QUOTE MODAL -->
+<div class="modal-overlay" id="quoteModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hdr"><h3 style="font-size:0.95rem">🔁 Alıntıyla Paylaş</h3><button class="modal-close" onclick="closeModal('quoteModal')">✕</button></div>
+    <div id="quoteOriginal" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.9rem;margin-bottom:1rem;font-size:0.83rem;color:var(--text2)"></div>
+    <textarea id="quoteContent" class="input" rows="3" placeholder="Düşünceni ekle..."></textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:0.7rem"><button class="btn btn-primary btn-sm" onclick="submitQuote()">Paylaş</button></div>
+  </div>
+</div>
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-hdr"><h3 style="font-size:0.95rem">🚩 Şikayet Et</h3><button class="modal-close" onclick="closeModal('reportModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:0.4rem">{% for r in ['Spam','Yanıltıcı bilgi','Nefret söylemi','Taciz','Uygunsuz içerik','Diğer'] %}<button class="btn btn-ghost" style="justify-content:flex-start;font-size:0.83rem" onclick="submitReport('{{r}}')">{{r}}</button>{% endfor %}</div>
+  </div>
+</div>
+<script>
+let _storyBg='#6366f1',_quotePostId=null,_reportTarget=null;
+const st=localStorage.getItem('theme');if(st)document.documentElement.dataset.theme=st;
+function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';localStorage.setItem('theme',h.dataset.theme);}
+function showToast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast ${type}`;const icons={'success':'✓','error':'✕','info':'●','warning':'⚠'};t.innerHTML=`<span>${icons[type]||'●'}</span>${msg}`;c.appendChild(t);setTimeout(()=>t.classList.add('show'),10);setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3200);}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+async function likePost(pid,btn){const r=await fetch(`/like/${pid}`,{method:'POST'});const d=await r.json();btn.querySelector('.le').textContent=d.liked?'❤️':'🤍';btn.querySelector('.lc').textContent=d.count;btn.classList.toggle('liked',d.liked);}
+async function bookmarkPost(pid,btn){const r=await fetch(`/bookmark/${pid}`,{method:'POST'});const d=await r.json();btn.querySelector('.be').textContent=d.saved?'🔖':'🏷️';btn.classList.toggle('bookmarked',d.saved);showToast(d.saved?'Kaydedildi':'Kaldırıldı','success');}
+function openQuote(pid,prev){_quotePostId=pid;document.getElementById('quoteOriginal').textContent=prev;document.getElementById('quoteContent').value='';openModal('quoteModal');}
+async function submitQuote(){const c=document.getElementById('quoteContent').value.trim();const r=await fetch(`/repost/${_quotePostId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quote:c})});if(r.ok){closeModal('quoteModal');showToast('Alıntılandı!','success');setTimeout(()=>location.reload(),700);}}
+async function repostDirect(pid){const r=await fetch(`/repost/${pid}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quote:''})});if(r.ok)showToast('Repost edildi!','success');}
+async function toggleComments(pid){const el=document.getElementById(`cmt-${pid}`);if(!el)return;if(!el.style.display||el.style.display==='none'){el.style.display='block';if(!el.dataset.loaded){const r=await fetch(`/comments/${pid}`);const data=await r.json();renderComments(pid,data);el.dataset.loaded='1';}}else el.style.display='none';}
+function renderComments(pid,comments){const el=document.getElementById(`cmt-${pid}`);const list=el.querySelector('.cmt-list');list.innerHTML=comments.length?comments.map(c=>`<div style="display:flex;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--border)"><div class="avatar av-sm" style="background:${c.avatar_color}">${c.avatar?`<img src="/uploads/${c.avatar}">`:(c.full_name||c.username)[0].toUpperCase()}</div><div><strong style="font-size:0.8rem">@${c.username}</strong><p style="font-size:0.83rem;color:var(--text);margin-top:0.1rem">${c.content}</p></div></div>`).join(''):'<p style="color:var(--muted);font-size:0.8rem;padding:0.4rem 0">Henüz yorum yok.</p>';}
+async function submitComment(pid){const inp=document.querySelector(`#cmt-${pid} .comment-input`);const c=inp.value.trim();if(!c)return;const r=await fetch(`/comment/${pid}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:c})});if(r.ok){const d=await r.json();inp.value='';const list=document.querySelector(`#cmt-${pid} .cmt-list`);list.innerHTML+=`<div style="display:flex;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--border)"><div class="avatar av-sm" style="background:${d.comment.avatar_color}">${(d.comment.full_name||d.comment.username)[0].toUpperCase()}</div><div><strong style="font-size:0.8rem">@${d.comment.username}</strong><p style="font-size:0.83rem;color:var(--text);margin-top:0.1rem">${d.comment.content}</p></div></div>`;const cc=document.querySelector(`#pa-${pid} .cc`);if(cc)cc.textContent=parseInt(cc.textContent||0)+1;showToast('Yorum eklendi','success');}}
+async function deletePost(pid){if(!confirm('Silmek istediğine emin misin?'))return;const r=await fetch(`/delete_post/${pid}`,{method:'POST'});if(r.ok){document.getElementById(`post-${pid}`)?.remove();showToast('Silindi','success');}}
+async function toggleFollow(uid,btn){const r=await fetch(`/follow/${uid}`,{method:'POST'});const d=await r.json();btn.textContent=d.following?'✓ Takiptesin':'+ Takip Et';btn.className=d.following?btn.className.replace('btn-primary','btn-ghost'):btn.className.replace('btn-ghost','btn-primary');const fc=document.getElementById('follower-count');if(fc)fc.textContent=d.count;}
+async function submitStory(){const c=document.getElementById('storyContent').value.trim();if(!c)return showToast('Metin gerekli','error');const r=await fetch('/story',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:c,bg_color:_storyBg})});if(r.ok){closeModal('storyModal');showToast('Hikaye paylaşıldı!','success');setTimeout(()=>location.reload(),700);}}
+function openReport(type,id){_reportTarget={type,id};openModal('reportModal');}
+async function submitReport(reason){if(!_reportTarget)return;await fetch('/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(_reportTarget),reason})});closeModal('reportModal');showToast('Şikayetiniz alındı','success');}
+function linkify(el){if(!el)return;el.innerHTML=el.textContent.replace(/\n/g,'<br>').replace(/#(\w+)/g,'<a href="/explore?tag=$1" class="hashtag">#$1</a>').replace(/@(\w+)/g,'<a href="/profile/$1" class="hashtag">@$1</a>');}
+document.querySelectorAll('.post-content').forEach(linkify);
+
+async function resendVerification(){
+  const btn=document.getElementById('verifyBtn');
+  btn.disabled=true;btn.textContent='Gönderiliyor...';
+  try{
+    const r=await fetch('/resend_verification',{method:'POST'});
+    const d=await r.json();
+    if(d.success){
+      showToast('Doğrulama bağlantısı oluşturuldu!','success');
+      // In dev mode, show the link
+      if(d.debug_url){
+        const link=document.createElement('a');link.href=d.debug_url;link.style.cssText='position:fixed;bottom:80px;right:20px;z-index:9999;background:#f59e0b;color:#000;padding:0.7rem 1rem;border-radius:10px;font-size:0.8rem;font-weight:600;text-decoration:none;max-width:320px;word-break:break-all;box-shadow:0 4px 20px rgba(0,0,0,0.5)';
+        link.textContent='🔗 Doğrulama: '+d.debug_url.split('/').pop().substring(0,20)+'...';
+        link.target='_blank';document.body.appendChild(link);setTimeout(()=>link.remove(),12000);
+      }
+    }else showToast(d.error||'Hata','error');
+  }catch(e){showToast('Bağlantı hatası','error');}
+  btn.disabled=false;btn.textContent='Doğrulama Bağlantısı Al';
+}
+
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

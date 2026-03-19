@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Etkinlikler — Sterk{% endblock %}
+{% block extra_style %}
+.events-wrap{max-width:800px;margin:0 auto;padding:2rem 1rem;}
+.event-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem;margin-bottom:0.8rem;display:flex;gap:1.2rem;transition:border-color 0.2s;}
+.event-card:hover{border-color:rgba(99,102,241,0.3);}
+.event-date-box{width:60px;flex-shrink:0;text-align:center;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:0.6rem 0.4rem;height:fit-content;}
+.event-date-box .day{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--accent);display:block;}
+.event-date-box .month{font-size:0.65rem;color:var(--text2);text-transform:uppercase;}
+.event-info h3{font-size:0.95rem;margin-bottom:0.3rem;}
+.event-info p{font-size:0.8rem;color:var(--text2);margin-bottom:0.5rem;}
+.event-meta{display:flex;gap:1rem;font-size:0.75rem;color:var(--muted);}
+{% endblock %}
+{% block content %}
+<div class="events-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <h1 style="font-size:1.4rem">📅 Etkinlikler</h1>
+    <button class="btn btn-primary" onclick="openModal('createEventModal')">+ Etkinlik Oluştur</button>
+  </div>
+  {% for e in events %}
+  <div class="event-card">
+    <div class="event-date-box">
+      <span class="day">{{ e.event_date[8:10] if e.event_date else '?' }}</span>
+      <span class="month">{{ ['','Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][e.event_date[5:7]|int] if e.event_date else '' }}</span>
+    </div>
+    <div class="event-info" style="flex:1">
+      <h3>{{ e.title }}</h3>
+      <p>{{ e.description or '' }}</p>
+      <div class="event-meta">
+        {% if e.location %}<span>📍 {{ e.location }}</span>{% endif %}
+        {% if e.event_time %}<span>⏰ {{ e.event_time }}</span>{% endif %}
+        <span>👤 {{ e.username }}</span>
+        <span>✅ {{ e.going_count }} katılıyor</span>
+      </div>
+      <div style="margin-top:0.7rem;display:flex;gap:0.5rem">
+        <button class="btn btn-primary btn-sm" onclick="attend({{ e.id }},'going',this)">{% if e.my_status == 'going' %}✓ Katılıyorum{% else %}Katıl{% endif %}</button>
+        <button class="btn btn-ghost btn-sm" onclick="attend({{ e.id }},'maybe',this)">Belki</button>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:4rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">📅</div><p>Henüz etkinlik yok. İlk etkinliği sen oluştur!</p></div>
+  {% endfor %}
+</div>
+<div class="modal-overlay" id="createEventModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3 style="font-size:1rem">📅 Etkinlik Oluştur</h3><button class="modal-close" onclick="closeModal('createEventModal')">✕</button></div>
+    <div class="field"><label>Etkinlik Adı</label><input id="eTitle" class="input"></div>
+    <div class="field"><label>Açıklama</label><textarea id="eDesc" class="input" rows="2"></textarea></div>
+    <div class="field"><label>Konum</label><input id="eLoc" class="input" placeholder="Şehir, mekan..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="field"><label>Tarih</label><input id="eDate" class="input" type="date"></div>
+      <div class="field"><label>Saat</label><input id="eTime" class="input" type="time"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="createEvent()">Oluştur</button></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function attend(id,status,btn){const r=await fetch(`/events/${id}/attend`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(r.ok){btn.textContent=status==='going'?'✓ Katılıyorum':'✓ Belki';showToast('Katılım güncellendi','success');}}
+async function createEvent(){const r=await fetch('/events/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:document.getElementById('eTitle').value,description:document.getElementById('eDesc').value,location:document.getElementById('eLoc').value,event_date:document.getElementById('eDate').value,event_time:document.getElementById('eTime').value})});if(r.ok){closeModal('createEventModal');showToast('Etkinlik oluşturuldu!','success');setTimeout(()=>location.reload(),700);}}
+</script>
+{% endblock %}

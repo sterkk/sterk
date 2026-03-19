@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ question.title }} — Sterk{% endblock %}
+{% block extra_style %}
+.qa-detail{max-width:750px;margin:0 auto;padding:2rem 1rem;}
+.answer-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:0.7rem;}
+.answer-card.accepted{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.03);}
+{% endblock %}
+{% block content %}
+<div class="qa-detail">
+  <a href="/questions" class="btn btn-ghost btn-sm" style="margin-bottom:1.2rem">← Geri</a>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem">
+    <h1 style="font-size:1.1rem;margin-bottom:0.8rem">{{ question.title }}</h1>
+    {% if question.content %}<p style="font-size:0.88rem;color:var(--text2);line-height:1.6;margin-bottom:0.8rem">{{ question.content }}</p>{% endif %}
+    <div style="display:flex;gap:1rem;font-size:0.75rem;color:var(--muted)">
+      <span>@{{ question.username }}</span><span>{{ time_ago(question.created_at) }}</span><span>👁️ {{ question.views }}</span>
+    </div>
+  </div>
+  <h3 style="font-size:0.88rem;color:var(--text2);margin-bottom:0.8rem">{{ answers|length }} Cevap</h3>
+  {% for a in answers %}
+  <div class="answer-card {% if a.is_accepted %}accepted{% endif %}">
+    <div style="display:flex;gap:0.7rem">
+      <a href="/profile/{{ a.username }}"><div class="avatar av-sm" style="background:{{ a.avatar_color }}">{{ (a.full_name or a.username)[0].upper() }}</div></a>
+      <div style="flex:1">
+        {% if a.is_accepted %}<div style="color:var(--success);font-size:0.75rem;margin-bottom:0.3rem">✓ Kabul Edilen Cevap</div>{% endif %}
+        <p style="font-size:0.88rem;line-height:1.6">{{ a.content }}</p>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:0.5rem">@{{ a.username }} · {{ time_ago(a.created_at) }}</div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div style="color:var(--muted);font-size:0.85rem;padding:1rem">Henüz cevap yok. İlk cevabı sen ver!</div>
+  {% endfor %}
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-top:1rem">
+    <h4 style="font-size:0.88rem;margin-bottom:0.8rem">Cevabını Yaz</h4>
+    <textarea id="ansContent" class="input" rows="4" placeholder="Cevabını buraya yaz..."></textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:0.7rem">
+      <button class="btn btn-primary" onclick="submitAnswer({{ question.id }})">Cevapla →</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function submitAnswer(qid){const c=document.getElementById('ansContent').value.trim();if(!c)return showToast('Cevap boş olamaz','error');const r=await fetch(`/questions/${qid}/answer`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:c})});if(r.ok){showToast('Cevabın eklendi!','success');setTimeout(()=>location.reload(),700);}}
+</script>
+{% endblock %}

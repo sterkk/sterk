@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}İş İlanları — Sterk{% endblock %}
+{% block extra_style %}
+.jobs-wrap{max-width:900px;margin:0 auto;padding:2rem 1rem;}
+.job-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem;margin-bottom:0.8rem;transition:border-color 0.2s;}
+.job-card:hover{border-color:rgba(99,102,241,0.3);}
+.job-type-badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.7rem;font-weight:600;margin-bottom:0.5rem;}
+.ft{background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);}
+.pt{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);}
+.remote{background:rgba(99,102,241,0.1);color:#a5b4fc;border:1px solid rgba(99,102,241,0.2);}
+.filter-tabs{display:flex;gap:0.5rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.ftab{padding:0.35rem 0.9rem;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.8rem;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.ftab.active,.ftab:hover{border-color:var(--accent);color:var(--accent);}
+{% endblock %}
+{% block content %}
+<div class="jobs-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <h1 style="font-size:1.4rem">💼 İş İlanları</h1>
+    <button class="btn btn-primary" onclick="openModal('createJobModal')">+ İlan Ver</button>
+  </div>
+  <div class="filter-tabs">
+    <a href="/jobs" class="ftab {% if not cat %}active{% endif %}">Tümü</a>
+    <a href="/jobs?cat=Tam Zamanlı" class="ftab {% if cat=='Tam Zamanlı' %}active{% endif %}">Tam Zamanlı</a>
+    <a href="/jobs?cat=Yarı Zamanlı" class="ftab {% if cat=='Yarı Zamanlı' %}active{% endif %}">Yarı Zamanlı</a>
+    <a href="/jobs?cat=Uzaktan" class="ftab {% if cat=='Uzaktan' %}active{% endif %}">Uzaktan</a>
+    <a href="/jobs?cat=Staj" class="ftab {% if cat=='Staj' %}active{% endif %}">Staj</a>
+    <a href="/jobs?cat=Freelance" class="ftab {% if cat=='Freelance' %}active{% endif %}">Freelance</a>
+  </div>
+  {% for j in jobs %}
+  <div class="job-card">
+    <div class="job-type-badge {% if j.job_type=='Tam Zamanlı' %}ft{% elif j.job_type=='Uzaktan' %}remote{% else %}pt{% endif %}">{{ j.job_type or 'Belirtilmemiş' }}</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
+      <div>
+        <h3 style="font-size:0.95rem">{{ j.title }}</h3>
+        <div style="font-size:0.82rem;color:var(--text2)">{{ j.company }} {% if j.location %}· 📍{{ j.location }}{% endif %} {% if j.salary %}· 💰{{ j.salary }}{% endif %}</div>
+      </div>
+      <div style="display:flex;gap:0.4rem">
+        <button class="btn btn-ghost btn-sm" onclick="saveJob({{ j.id }},this)">{% if j.saved %}🔖{% else %}🏷️{% endif %}</button>
+        <button class="btn btn-primary btn-sm" onclick="applyJob({{ j.id }})">Başvur</button>
+      </div>
+    </div>
+    {% if j.description %}<p style="font-size:0.82rem;color:var(--text2);margin-top:0.6rem;line-height:1.5">{{ j.description[:200] }}{% if j.description|length > 200 %}...{% endif %}</p>{% endif %}
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem">{{ j.app_count }} başvuru · @{{ j.username }} · {{ time_ago(j.created_at) }}</div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:4rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">💼</div><p>Henüz ilan yok. İlk ilanı sen ver!</p></div>
+  {% endfor %}
+</div>
+<!-- Create Job Modal -->
+<div class="modal-overlay" id="createJobModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3 style="font-size:1rem">💼 İş İlanı Ver</h3><button class="modal-close" onclick="closeModal('createJobModal')">✕</button></div>
+    <div class="field"><label>Pozisyon</label><input id="jTitle" class="input" placeholder="Frontend Developer..."></div>
+    <div class="field"><label>Şirket</label><input id="jCompany" class="input"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="field"><label>Konum</label><input id="jLoc" class="input" placeholder="İstanbul / Uzaktan"></div>
+      <div class="field"><label>Tür</label><select id="jType" class="input"><option>Tam Zamanlı</option><option>Yarı Zamanlı</option><option>Uzaktan</option><option>Staj</option><option>Freelance</option></select></div>
+    </div>
+    <div class="field"><label>Maaş (opsiyonel)</label><input id="jSalary" class="input" placeholder="30.000-50.000 TL"></div>
+    <div class="field"><label>Açıklama</label><textarea id="jDesc" class="input" rows="4"></textarea></div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="createJob()">İlanı Yayınla</button></div>
+  </div>
+</div>
+<!-- Apply Modal -->
+<div class="modal-overlay" id="applyModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hdr"><h3 style="font-size:1rem">📩 Başvur</h3><button class="modal-close" onclick="closeModal('applyModal')">✕</button></div>
+    <div class="field"><label>Ön Yazı (opsiyonel)</label><textarea id="coverLetter" class="input" rows="5" placeholder="Neden bu pozisyona uygunsun?"></textarea></div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="submitApply()">Başvur →</button></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let _applyJobId=null;
+async function createJob(){const r=await fetch('/jobs/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:document.getElementById('jTitle').value,company:document.getElementById('jCompany').value,location:document.getElementById('jLoc').value,job_type:document.getElementById('jType').value,salary:document.getElementById('jSalary').value,description:document.getElementById('jDesc').value})});if(r.ok){closeModal('createJobModal');showToast('İlan yayınlandı!','success');setTimeout(()=>location.reload(),700);}}
+function applyJob(id){_applyJobId=id;document.getElementById('coverLetter').value='';openModal('applyModal');}
+async function submitApply(){const r=await fetch(`/jobs/${_applyJobId}/apply`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cover_letter:document.getElementById('coverLetter').value})});const d=await r.json();if(r.ok){closeModal('applyModal');showToast('Başvurun alındı!','success');}else showToast(d.error||'Hata','error');}
+async function saveJob(id,btn){const r=await fetch(`/jobs/${id}/save`,{method:'POST'});const d=await r.json();btn.textContent=d.saved?'🔖':'🏷️';showToast(d.saved?'Kaydedildi':'Kaldırıldı','success');}
+</script>
+{% endblock %}

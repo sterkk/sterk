@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sterk — Gerçek Bağlantılar. Güçlü Topluluklar.</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--p:#7c3aed;--p2:#a855f7;--p3:#c084fc;--dark:#050508;}
+html{scroll-behavior:smooth;}
+body{background:var(--dark);color:#e2e8f0;font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:9999;background:var(--dark);display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none;}
+#splash.hiding{animation:splashOut 0.85s cubic-bezier(0.4,0,0.2,1) forwards;}
+@keyframes splashOut{0%{opacity:1;transform:scale(1);}60%{opacity:1;transform:scale(1.03);}100%{opacity:0;transform:scale(1.07);}}
+.si-wrap{position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center;}
+.si-ring{position:absolute;border-radius:50%;border:1px solid transparent;animation:ringPulse 2.4s ease-in-out infinite;}
+.si-ring:nth-child(1){width:86px;height:86px;border-color:rgba(124,58,237,0.55);animation-delay:0s;}
+.si-ring:nth-child(2){width:108px;height:108px;border-color:rgba(168,85,247,0.3);animation-delay:0.3s;}
+.si-ring:nth-child(3){width:130px;height:130px;border-color:rgba(192,132,252,0.14);animation-delay:0.6s;}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.09);opacity:0.55;}}
+.si-core{
+  width:66px;height:66px;
+  background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);
+  border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 44px rgba(124,58,237,0.75),0 0 90px rgba(124,58,237,0.28);
+  animation:corePulse 2s ease-in-out infinite;
+  position:relative;z-index:1;
+}
+@keyframes corePulse{0%,100%{box-shadow:0 0 44px rgba(124,58,237,0.75),0 0 90px rgba(124,58,237,0.28);}50%{box-shadow:0 0 70px rgba(124,58,237,1),0 0 140px rgba(124,58,237,0.45);}}
+.si-s{font-family:'Syne',sans-serif;font-weight:900;font-size:2.1rem;color:white;line-height:1;}
+.si-word{margin-top:1.7rem;font-family:'Syne',sans-serif;font-weight:900;font-size:2.5rem;letter-spacing:0.26em;text-transform:uppercase;background:linear-gradient(135deg,#c084fc 0%,#a855f7 45%,#7c3aed 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:wordRev 1s cubic-bezier(0.16,1,0.3,1) 0.35s both;}
+@keyframes wordRev{from{opacity:0;letter-spacing:0.5em;filter:blur(10px);}to{opacity:1;letter-spacing:0.26em;filter:blur(0);}}
+.si-tag{margin-top:0.55rem;font-size:0.68rem;letter-spacing:0.15em;color:#6b7280;text-transform:uppercase;animation:fdUp 0.7s ease 1s both;}
+@keyframes fdUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.si-track{width:150px;height:2px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:2rem;overflow:hidden;animation:fdUp 0.5s ease 1.1s both;}
+.si-fill{height:100%;width:0;background:linear-gradient(90deg,#4c1d95,#7c3aed,#a855f7,#c084fc);border-radius:2px;animation:fillPrg 2.3s cubic-bezier(0.4,0,0.2,1) 1.2s forwards;}
+@keyframes fillPrg{to{width:100%;}}
+
+/* CANVAS */
+#bgc{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.55;}
+
+/* NAV */
+.lnav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;transition:all 0.3s;}
+.lnav.solid{background:rgba(5,5,8,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(124,58,237,0.12);}
+.nbrand{display:flex;align-items:center;gap:0.65rem;text-decoration:none;}
+.nbox{width:36px;height:36px;background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;font-size:1rem;color:white;box-shadow:0 4px 14px rgba(124,58,237,0.4);}
+.nname{font-family:'Syne',sans-serif;font-weight:900;font-size:1.22rem;letter-spacing:0.08em;background:linear-gradient(135deg,#c084fc,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nbtns{display:flex;gap:0.5rem;}
+.nbtn{padding:0.44rem 1.1rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.83rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.nbtn-g{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#d1d5db;}
+.nbtn-g:hover{border-color:rgba(124,58,237,0.5);color:#c084fc;}
+.nbtn-p{background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;border:none;box-shadow:0 4px 14px rgba(124,58,237,0.35);}
+.nbtn-p:hover{opacity:0.88;transform:translateY(-1px);}
+
+/* HERO */
+#main{position:relative;z-index:1;}
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:7rem 1.5rem 5rem;}
+.hbadge{display:inline-flex;align-items:center;gap:0.45rem;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.22);border-radius:30px;padding:0.28rem 0.9rem;font-size:0.72rem;color:#c084fc;letter-spacing:0.05em;margin-bottom:1.8rem;animation:fdUp 0.6s ease 0.2s both;}
+.hbdot{width:6px;height:6px;border-radius:50%;background:#7c3aed;animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.hero h1{font-family:'Syne',sans-serif;font-weight:900;font-size:clamp(2.8rem,7vw,5.8rem);line-height:1.04;letter-spacing:-0.02em;margin-bottom:1.5rem;animation:fdUp 0.7s ease 0.4s both;}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,#7c3aed,#a855f7,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;}
+.hero h1 em::after{content:'';position:absolute;left:0;right:0;bottom:-5px;height:3px;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:2px;transform:scaleX(0);transform-origin:left;animation:lineG 0.7s ease 1.4s forwards;}
+@keyframes lineG{to{transform:scaleX(1);}}
+.hsub{font-size:clamp(1rem,2.5vw,1.17rem);color:#94a3b8;max-width:540px;line-height:1.75;margin-bottom:2.6rem;animation:fdUp 0.7s ease 0.6s both;}
+.hbtns{display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;animation:fdUp 0.7s ease 0.8s both;}
+.hbtn{padding:0.85rem 2.2rem;border-radius:13px;font-size:0.97rem;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;}
+.hbtn-p{background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);color:white;border:none;box-shadow:0 8px 28px rgba(124,58,237,0.45);}
+.hbtn-p:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(124,58,237,0.62);}
+.hbtn-g{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;}
+.hbtn-g:hover{border-color:rgba(124,58,237,0.5);background:rgba(124,58,237,0.06);}
+.hstats{display:flex;gap:3.5rem;justify-content:center;margin-top:4rem;flex-wrap:wrap;animation:fdUp 0.7s ease 1s both;}
+.hst strong{font-family:'Syne',sans-serif;font-size:2rem;font-weight:900;display:block;background:linear-gradient(135deg,#c084fc,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hst span{font-size:0.68rem;color:#6b7280;letter-spacing:0.05em;text-transform:uppercase;}
+.mq{margin-top:4rem;overflow:hidden;mask:linear-gradient(90deg,transparent,white 15%,white 85%,transparent);animation:fdUp 0.7s ease 1.1s both;}
+.mqt{display:flex;gap:1.4rem;width:max-content;animation:mqScroll 30s linear infinite;}
+@keyframes mqScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.mqtag{padding:0.38rem 0.95rem;border-radius:30px;font-size:0.73rem;white-space:nowrap;background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.17);color:#a78bfa;}
+
+/* DIVIDER */
+.gd{height:1px;background:linear-gradient(90deg,transparent,rgba(124,58,237,0.3),rgba(168,85,247,0.3),transparent);}
+
+/* SECTIONS */
+.sec{padding:6rem 1.5rem;position:relative;z-index:1;}
+.slbl{text-align:center;font-size:0.69rem;text-transform:uppercase;letter-spacing:0.14em;color:#7c3aed;margin-bottom:0.6rem;}
+.stit{text-align:center;font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,2.7rem);font-weight:800;margin-bottom:0.9rem;letter-spacing:-0.01em;}
+.ssub{text-align:center;color:#94a3b8;max-width:480px;margin:0 auto 3.5rem;font-size:0.9rem;line-height:1.7;}
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.4rem;max-width:900px;margin:0 auto;}
+.step{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:2rem 1.6rem;transition:all 0.35s;position:relative;overflow:hidden;}
+.step::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,58,237,0.07),transparent);opacity:0;transition:opacity 0.3s;}
+.step:hover{border-color:rgba(124,58,237,0.35);transform:translateY(-5px);}
+.step:hover::before{opacity:1;}
+.stn{font-family:'Syne',sans-serif;font-size:3.2rem;font-weight:900;color:rgba(124,58,237,0.12);line-height:1;}
+.stico{font-size:1.8rem;margin:0.6rem 0 0.8rem;}
+.step h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:0.5rem;}
+.step p{font-size:0.79rem;color:#94a3b8;line-height:1.65;}
+/* feats */
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.2rem;max-width:1000px;margin:0 auto;}
+.feat{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:18px;padding:1.5rem;transition:all 0.3s;}
+.feat:hover{border-color:rgba(124,58,237,0.28);background:rgba(124,58,237,0.04);}
+.fico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:0.9rem;}
+.feat h3{font-family:'Syne',sans-serif;font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;}
+.feat p{font-size:0.77rem;color:#6b7280;line-height:1.6;}
+
+/* CTA */
+.ctasec{padding:7rem 1.5rem;text-align:center;position:relative;z-index:1;overflow:hidden;}
+.ctaglow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:350px;background:radial-gradient(ellipse,rgba(124,58,237,0.17) 0%,transparent 70%);pointer-events:none;}
+.ctasec h2{font-family:'Syne',sans-serif;font-size:clamp(2.2rem,5vw,3.8rem);font-weight:900;letter-spacing:-0.02em;margin-bottom:1rem;}
+.ctasec h2 span{background:linear-gradient(135deg,#7c3aed,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.ctasec p{color:#94a3b8;margin-bottom:2.5rem;font-size:0.94rem;}
+
+/* FOOTER */
+footer{padding:2rem 2rem;border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;position:relative;z-index:1;}
+.fbrand{font-family:'Syne',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:0.08em;background:linear-gradient(135deg,#c084fc,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+footer small{font-size:0.72rem;color:#374151;}
+
+/* REVEAL */
+.rv{opacity:0;transform:translateY(26px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.rv.in{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="si-wrap">
+    <div class="si-ring"></div>
+    <div class="si-ring"></div>
+    <div class="si-ring"></div>
+    <div class="si-core"><span class="si-s">S</span></div>
+  </div>
+  <div class="si-word">STERK</div>
+  <div class="si-tag">Gerçek Bağlantılar &bull; Güçlü Topluluklar</div>
+  <div class="si-track"><div class="si-fill"></div></div>
+</div>
+
+<canvas id="bgc"></canvas>
+
+<!-- NAV -->
+<nav class="lnav" id="lnav">
+  <a class="nbrand" href="/"><div class="nbox">S</div><span class="nname">STERK</span></a>
+  <div class="nbtns">
+    <a href="/login" class="nbtn nbtn-g">Giriş Yap</a>
+    <a href="/register" class="nbtn nbtn-p">Üye Ol</a>
+  </div>
+</nav>
+
+<div id="main">
+<section class="hero">
+  <div class="hbadge"><span class="hbdot"></span> YENİ NESİL PROFESYONEL AĞ</div>
+  <h1>Alanında<br><em>Güçlü</em> Ol.<br>Gerçekten Bağlan.</h1>
+  <p class="hsub">Sterk'te <strong style="color:#c084fc">kendi alanındaki uzmanlarla</strong> bağlanırken <strong style="color:#10b981">Genel Alan'da</strong> herkesle paylaşırsın. İki dünya, tek platform.</p>
+  <div class="hbtns">
+    <a href="/register" class="hbtn hbtn-p">⚡ Hemen Başla →</a>
+    <a href="/login" class="hbtn hbtn-g">Giriş Yap</a>
+  </div>
+  <div class="hstats">
+    <div class="hst"><strong>13+</strong><span>Meslek Kategorisi</span></div>
+    <div class="hst"><strong>90</strong><span>Gün Kategori Sabitliği</span></div>
+    <div class="hst"><strong>50+</strong><span>Ülke Desteği</span></div>
+  </div>
+  <div class="mq"><div class="mqt" id="mqt"></div></div>
+</section>
+
+<div class="gd"></div>
+
+<section class="sec">
+  <div class="slbl">NASIL ÇALIŞIR</div>
+  <h2 class="stit rv">Üç Adımda Doğru Kişilerle</h2>
+  <p class="ssub rv">Her hesap gerçek kimliğe dayanır. Kategorin, topluluğun.</p>
+  <div class="steps">
+    <div class="step rv"><div class="stn">01</div><div class="stico">📋</div><h3>Gerçek Kimliğinle Kayıt Ol</h3><p>Adın, yaşın, cinsiyetin — hepsi gerçek. Yanlış bilgi hesap askıya almayla sonuçlanır.</p></div>
+    <div class="step rv"><div class="stn">02</div><div class="stico">🎯</div><h3>Mesleğini & Alanını Seç</h3><p>Mühendis mi, doktor mu, öğretmen mi? Seçtiğin kategori 90 gün sabit. Ciddiye alınır.</p></div>
+    <div class="step rv"><div class="stn">03</div><div class="stico">🤝</div><h3>İki Alanda Buluş</h3><p>Kendi kategorinde uzmanlarla derinleş, <strong style="color:#10b981">Genel Alan'da</strong> herkesle buluş. Seçim senin.</p></div>
+  </div>
+</section>
+
+<div class="gd"></div>
+
+<section class="sec">
+  <div class="slbl">ÖZELLİKLER</div>
+  <h2 class="stit rv">Her Şey Tek Platformda</h2>
+  <p class="ssub rv">Sosyal akış, iş ilanları, etkinlikler, Q&A — hepsi alanına özel.</p>
+  <div class="feats">
+    <div class="feat rv"><div class="fico" style="background:rgba(124,58,237,0.1)">💬</div><h3>Çift Alan Akışı</h3><p>Kendi alanına odaklan ya da <strong>Genel Alan'a</strong> geç — herkesin paylaşımlarını gör.</p></div>
+    <div class="feat rv"><div class="fico" style="background:rgba(16,185,129,0.1)">💼</div><h3>İş İlanları</h3><p>Sektörüne özel fırsatlar. Doğru aday, doğru pozisyon.</p></div>
+    <div class="feat rv"><div class="fico" style="background:rgba(244,63,94,0.1)">📅</div><h3>Etkinlikler</h3><p>Konferans, webinar, buluşma — alanındaki etkinlikleri kaçırma.</p></div>
+    <div class="feat rv"><div class="fico" style="background:rgba(245,158,11,0.1)">❓</div><h3>Soru & Cevap</h3><p>Uzmanlardan gerçek cevaplar. Uzmanlığını paylaş.</p></div>
+    <div class="feat rv"><div class="fico" style="background:rgba(6,182,212,0.1)">👥</div><h3>Gruplar</h3><p>Alanına özel topluluklar. Birlikte üret.</p></div>
+    <div class="feat rv"><div class="fico" style="background:rgba(168,85,247,0.1)">🎖️</div><h3>Sertifikalar</h3><p>PDF sertifikalarını profiline ekle. Uzmanlığını belgele.</p></div>
+  </div>
+</section>
+
+<div class="gd"></div>
+
+<section class="ctasec">
+  <div class="ctaglow"></div>
+  <h2 class="rv">Topluluğuna<br><span>Katıl.</span></h2>
+  <p class="rv">Gerçek bağlantılar. Gerçek fırsatlar. Gerçek büyüme.</p>
+  <div class="rv"><a href="/register" class="hbtn hbtn-p" style="font-size:1.05rem;padding:0.95rem 2.8rem;">⚡ Ücretsiz Üye Ol</a></div>
+</section>
+
+<footer>
+  <div class="fbrand">STERK</div>
+  <small>© 2025 Sterk · Gerçek bağlantılar, güçlü topluluklar.</small>
+</footer>
+</div>
+
+<script>
+// SPLASH
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    const sp=document.getElementById('splash');
+    sp.classList.add('hiding');
+    setTimeout(()=>sp.remove(),900);
+  },3500);
+});
+// CANVAS
+const cv=document.getElementById('bgc'),cx=cv.getContext('2d');
+function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+resize();window.addEventListener('resize',resize);
+const C=['124,58,237','168,85,247','192,132,252','99,102,241'];
+const pts=Array.from({length:100},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.32,vy:(Math.random()-.5)*.32,r:Math.random()*1.3+.3,c:C[Math.floor(Math.random()*C.length)],a:Math.random()*.3+.05}));
+function draw(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>cv.width)p.vx*=-1;if(p.y<0||p.y>cv.height)p.vy*=-1;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle=`rgba(${p.c},${p.a})`;cx.fill();});
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<105){cx.beginPath();cx.strokeStyle=`rgba(124,58,237,${.07*(1-d/105)})`;cx.lineWidth=.5;cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);cx.stroke();}}
+  requestAnimationFrame(draw);
+}
+draw();
+// MARQUEE
+const tags=['Teknoloji & Yazılım','Sağlık & Tıp','Eğitim','Mühendislik','Sanat & Tasarım','İş & Finans','Hukuk','Medya','Bilim','Spor & Fitness','Tarım','Backend Dev','Frontend Dev','Doktor','Avukat','Mimar','Data Scientist','Öğretmen','Girişimci','Öğrenci'];
+const mt=document.getElementById('mqt');
+[...tags,...tags].forEach(t=>{const e=document.createElement('span');e.className='mqtag';e.textContent=t;mt.appendChild(e);});
+// NAV
+window.addEventListener('scroll',()=>document.getElementById('lnav').classList.toggle('solid',scrollY>40));
+// REVEAL
+const ro=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('in');}),{threshold:0.1});
+document.querySelectorAll('.rv').forEach(el=>ro.observe(el));
+</script>
+</body>
+</html>

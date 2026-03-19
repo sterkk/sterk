@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Admin Paneli — Sterk{% endblock %}
+{% block extra_style %}
+.adm-wrap{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 4rem;}
+.adm-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
+.adm-hdr h1{font-family:'Syne',sans-serif;font-size:1.3rem;display:flex;align-items:center;gap:0.5rem;}
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.8rem;margin-bottom:1.5rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem;text-align:center;}
+.stat-card .sv{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;line-height:1;}
+.stat-card .sl{font-size:0.72rem;color:var(--text2);margin-top:0.3rem;}
+.stat-card.warn .sv{color:#f59e0b;}
+.stat-card.danger .sv{color:#ef4444;}
+.stat-card.ok .sv{color:#10b981;}
+/* TABS */
+.adm-tabs{display:flex;gap:0.2rem;border-bottom:1px solid var(--border);margin-bottom:1.2rem;flex-wrap:wrap;}
+.adm-tab{padding:0.55rem 1rem;font-size:0.82rem;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;border-radius:6px 6px 0 0;}
+.adm-tab.active,.adm-tab:hover{color:var(--accent);border-bottom-color:var(--accent);background:rgba(99,102,241,0.05);}
+/* PANEL */
+.adm-panel{display:none;}
+.adm-panel.active{display:block;}
+/* TABLE */
+.adm-table{width:100%;border-collapse:collapse;}
+.adm-table th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);padding:0.6rem 0.8rem;text-align:left;border-bottom:1px solid var(--border);}
+.adm-table td{padding:0.65rem 0.8rem;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.82rem;vertical-align:middle;}
+.adm-table tr:hover td{background:rgba(255,255,255,0.02);}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:0.15rem 0.5rem;border-radius:20px;font-size:0.68rem;font-weight:600;}
+.badge-pending{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.25);}
+.badge-ok{background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.25);}
+.badge-danger{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25);}
+.badge-info{background:rgba(99,102,241,0.1);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25);}
+/* ACTIONS */
+.act-row{display:flex;gap:0.4rem;flex-wrap:wrap;}
+.adm-btn{padding:0.25rem 0.65rem;border-radius:7px;border:none;font-size:0.73rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.adm-btn-ok{background:rgba(16,185,129,0.15);color:#10b981;}
+.adm-btn-ok:hover{background:rgba(16,185,129,0.25);}
+.adm-btn-danger{background:rgba(239,68,68,0.12);color:#ef4444;}
+.adm-btn-danger:hover{background:rgba(239,68,68,0.22);}
+.adm-btn-info{background:rgba(99,102,241,0.12);color:#a5b4fc;}
+.adm-btn-info:hover{background:rgba(99,102,241,0.22);}
+.adm-btn-warn{background:rgba(245,158,11,0.12);color:#f59e0b;}
+/* POST PREVIEW */
+.post-preview{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.7rem;max-width:340px;}
+.post-preview p{font-size:0.78rem;color:var(--text2);line-height:1.4;margin-top:0.3rem;}
+{% endblock %}
+{% block content %}
+<div class="adm-wrap">
+  <div class="adm-hdr">
+    <h1>🛡️ Admin Paneli</h1>
+    <div style="display:flex;gap:0.5rem">
+      <a href="/feed" class="btn btn-ghost btn-sm">← Feed'e Dön</a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stat-grid">
+    <div class="stat-card ok"><div class="sv">{{ stats.total_users }}</div><div class="sl">Toplam Kullanıcı</div></div>
+    <div class="stat-card"><div class="sv">{{ stats.verified_users }}</div><div class="sl">Doğrulanmış E-posta</div></div>
+    <div class="stat-card ok"><div class="sv">{{ stats.total_posts }}</div><div class="sl">Toplam Gönderi</div></div>
+    <div class="stat-card {% if stats.pending_posts > 0 %}warn{% endif %}"><div class="sv">{{ stats.pending_posts }}</div><div class="sl">Bekleyen Gönderi</div></div>
+    <div class="stat-card {% if stats.open_reports > 0 %}danger{% endif %}"><div class="sv">{{ stats.open_reports }}</div><div class="sl">Açık Şikayet</div></div>
+    <div class="stat-card info"><div class="sv" style="color:#a5b4fc">{{ stats.today_users }}</div><div class="sl">Bugün Yeni Üye</div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="adm-tabs">
+    <div class="adm-tab active" onclick="switchTab(this,'tabPosts')">📝 Bekleyen Gönderiler <span class="badge badge-pending" style="margin-left:4px">{{ stats.pending_posts }}</span></div>
+    <div class="adm-tab" onclick="switchTab(this,'tabReports')">🚩 Şikayetler <span class="badge badge-danger" style="margin-left:4px">{{ stats.open_reports }}</span></div>
+    <div class="adm-tab" onclick="switchTab(this,'tabUsers')">👥 Kullanıcılar</div>
+  </div>
+
+  <!-- BEKLEYEN GÖNDERİLER -->
+  <div id="tabPosts" class="adm-panel active">
+    {% if pending_posts %}
+    <table class="adm-table">
+      <tr><th>Kullanıcı</th><th>İçerik</th><th>Tarih</th><th>İşlem</th></tr>
+      {% for p in pending_posts %}
+      <tr id="post-row-{{ p.id }}">
+        <td>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <div class="avatar av-sm" style="background:{{ p.avatar_color }}">{{ (p.full_name or p.username)[0].upper() }}</div>
+            <a href="/profile/{{ p.username }}" style="color:var(--text)">@{{ p.username }}</a>
+          </div>
+        </td>
+        <td>
+          <div class="post-preview">
+            <div style="font-size:0.72rem;color:var(--muted)">{{ p.target_category or 'Genel' }}</div>
+            <p>{{ (p.content or '')[:200] }}{% if (p.content or '')|length > 200 %}...{% endif %}</p>
+            {% if p.media_url %}<div style="font-size:0.7rem;color:var(--muted);margin-top:0.3rem">📎 Medya var</div>{% endif %}
+          </div>
+        </td>
+        <td style="color:var(--text2);white-space:nowrap">{{ p.created_at[:10] }}</td>
+        <td>
+          <div class="act-row">
+            <button class="adm-btn adm-btn-ok" onclick="moderatePost({{ p.id }},'approve')">✓ Onayla</button>
+            <button class="adm-btn adm-btn-danger" onclick="moderatePost({{ p.id }},'reject')">✕ Reddet</button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--muted)">✅ Bekleyen gönderi yok</div>
+    {% endif %}
+  </div>
+
+  <!-- ŞİKAYETLER -->
+  <div id="tabReports" class="adm-panel">
+    {% if reports %}
+    <table class="adm-table">
+      <tr><th>Şikayet Eden</th><th>Tür</th><th>Sebep</th><th>Hedef</th><th>İşlem</th></tr>
+      {% for r in reports %}
+      <tr id="rep-row-{{ r.id }}">
+        <td><a href="/profile/{{ r.reporter_username }}" style="color:var(--text)">@{{ r.reporter_username }}</a></td>
+        <td><span class="badge badge-info">{{ r.target_type }}</span></td>
+        <td style="color:var(--text2);font-size:0.78rem">{{ r.reason or '—' }}</td>
+        <td style="font-size:0.78rem;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ (r.target_info or '')[:80] }}</td>
+        <td>
+          <div class="act-row">
+            <button class="adm-btn adm-btn-ok" onclick="resolveReport({{ r.id }},'resolved')">Çöz</button>
+            <button class="adm-btn adm-btn-danger" onclick="resolveReport({{ r.id }},'ban')">Banla</button>
+            <button class="adm-btn adm-btn-warn" onclick="resolveReport({{ r.id }},'dismiss')">Yoksay</button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--muted)">✅ Açık şikayet yok</div>
+    {% endif %}
+  </div>
+
+  <!-- KULLANICILAR -->
+  <div id="tabUsers" class="adm-panel">
+    <div style="margin-bottom:0.8rem">
+      <input id="userSearch" class="input" style="max-width:300px" placeholder="🔍 Kullanıcı ara..." oninput="filterUsers(this.value)">
+    </div>
+    <table class="adm-table" id="usersTable">
+      <tr><th>Kullanıcı</th><th>E-posta</th><th>Kayıt</th><th>Durum</th><th>İşlem</th></tr>
+      {% for u in recent_users %}
+      <tr class="user-row" data-name="{{ (u.full_name or u.username)|lower }}" data-un="{{ u.username|lower }}">
+        <td>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <div class="avatar av-sm" style="background:{{ u.avatar_color }}">
+              {% if u.avatar %}<img src="/uploads/{{ u.avatar }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}
+            </div>
+            <div>
+              <div><a href="/profile/{{ u.username }}" style="color:var(--text)">{{ u.full_name or u.username }}</a></div>
+              <div style="font-size:0.7rem;color:var(--muted)">@{{ u.username }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:0.78rem;color:var(--text2)">{{ u.email }}</td>
+        <td style="font-size:0.72rem;color:var(--muted)">{{ u.created_at[:10] }}</td>
+        <td>
+          <div style="display:flex;gap:0.3rem;flex-wrap:wrap">
+            {% if u.email_verified %}<span class="badge badge-ok">✓ E-posta</span>{% else %}<span class="badge badge-pending">⏳ E-posta</span>{% endif %}
+            {% if u.is_verified %}<span class="badge badge-ok">✓ Doğrulanmış</span>{% endif %}
+            {% if u.is_admin %}<span class="badge badge-info">👑 Admin</span>{% endif %}
+            {% if u.is_banned %}<span class="badge badge-danger">🚫 Banlı</span>{% endif %}
+          </div>
+        </td>
+        <td>
+          <div class="act-row">
+            <button class="adm-btn adm-btn-info" onclick="toggleVerify({{ u.id }},this)" title="Rozet doğrulama">{% if u.is_verified %}✓ Rozet Kaldır{% else %}✓ Doğrula{% endif %}</button>
+            <button class="adm-btn {% if u.is_banned %}adm-btn-ok{% else %}adm-btn-danger{% endif %}" onclick="toggleBan({{ u.id }},this)">{% if u.is_banned %}Yasağı Kaldır{% else %}Banla{% endif %}</button>
+            <button class="adm-btn adm-btn-warn" onclick="toggleAdmin({{ u.id }},this)">{% if u.is_admin %}Admin Al{% else %}Admin Yap{% endif %}</button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function switchTab(el, id){
+  document.querySelectorAll('.adm-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.adm-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+async function moderatePost(id, action){
+  const r = await fetch(`/admin/approve_post/${id}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+  if(r.ok){ document.getElementById(`post-row-${id}`)?.remove(); showToast(action==='approve'?'Gönderi onaylandı ✓':'Gönderi silindi','success'); }
+  else showToast('Hata','error');
+}
+
+async function resolveReport(id, action){
+  const r = await fetch(`/admin/resolve_report/${id}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+  if(r.ok){ document.getElementById(`rep-row-${id}`)?.remove(); showToast('Şikayet işlendi','success'); }
+  else showToast('Hata','error');
+}
+
+async function toggleVerify(uid, btn){
+  const r = await fetch(`/admin/toggle_verify/${uid}`, {method:'POST'});
+  const d = await r.json();
+  btn.textContent = d.verified ? '✓ Rozet Kaldır' : '✓ Doğrula';
+  showToast(d.verified ? 'Doğrulandı ✓' : 'Rozet kaldırıldı','success');
+}
+
+async function toggleBan(uid, btn){
+  const r = await fetch(`/admin/ban_user/${uid}`, {method:'POST'});
+  const d = await r.json();
+  btn.textContent = d.banned ? 'Yasağı Kaldır' : 'Banla';
+  btn.className = d.banned ? 'adm-btn adm-btn-ok' : 'adm-btn adm-btn-danger';
+  showToast(d.banned ? 'Kullanıcı banlandı' : 'Ban kaldırıldı','success');
+}
+
+async function toggleAdmin(uid, btn){
+  const r = await fetch(`/admin/make_admin/${uid}`, {method:'POST'});
+  const d = await r.json();
+  btn.textContent = d.is_admin ? 'Admin Al' : 'Admin Yap';
+  showToast(d.is_admin ? 'Admin yapıldı' : 'Admin alındı','success');
+}
+
+function filterUsers(q){
+  document.querySelectorAll('.user-row').forEach(row=>{
+    const match = row.dataset.name.includes(q.toLowerCase()) || row.dataset.un.includes(q.toLowerCase());
+    row.style.display = match ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}
