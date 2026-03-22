@@ -143,7 +143,7 @@
         <td>
           <div style="display:flex;align-items:center;gap:0.5rem">
             <div class="avatar av-sm" style="background:{{ u.avatar_color }}">
-              {% if u.avatar %}<img src="/uploads/{{ u.avatar }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}
+              {% if u.avatar %}<img src="{{ u.avatar | media_url }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}
             </div>
             <div>
               <div><a href="/profile/{{ u.username }}" style="color:var(--text)">{{ u.full_name or u.username }}</a></div>

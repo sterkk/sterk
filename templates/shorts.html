@@ -91,7 +91,7 @@
       {% for s in shorts %}
       <div class="short-card" onclick="openModal({{ loop.index0 }})">
         <div class="short-video-wrap">
-          <video src="/uploads/{{ s.video_url }}" preload="metadata" muted></video>
+          <video src="{{ s.video_url | media_url }}" preload="metadata" muted></video>
           <div class="short-overlay"></div>
           <div class="short-play">▶</div>
           <span class="view-badge">👁 {{ s.view_count }}</span>
@@ -101,7 +101,7 @@
             {% endif %}
             <div class="short-meta">
               <div class="short-av" style="background:{{ s.avatar_color }}">
-                {% if s.avatar %}<img src="/uploads/{{ s.avatar }}">{% else %}{{ s.full_name[0] if s.full_name else s.username[0] }}{% endif %}
+                {% if s.avatar %}<img src="{{ s.avatar | media_url }}">{% else %}{{ s.full_name[0] if s.full_name else s.username[0] }}{% endif %}
               </div>
               <span class="short-user">@{{ s.username }}</span>
               <div class="short-stats">

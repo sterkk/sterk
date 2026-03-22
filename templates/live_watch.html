@@ -68,7 +68,7 @@
     <div class="video-box" id="videoBox">
       <div class="video-placeholder" id="vidPlaceholder">
         <div class="vp-av" style="background:{{ stream.avatar_color }}">
-          {% if stream.avatar %}<img src="/uploads/{{ stream.avatar }}">{% else %}{{ (stream.full_name or stream.username)[0]|upper }}{% endif %}
+          {% if stream.avatar %}<img src="{{ stream.avatar | media_url }}">{% else %}{{ (stream.full_name or stream.username)[0]|upper }}{% endif %}
         </div>
         {% if stream.is_live %}
         <p style="font-size:1rem;font-weight:700;color:rgba(255,255,255,0.8);margin-bottom:0.3rem;">{{ stream.title or 'Canlı Yayın' }}</p>
@@ -88,7 +88,7 @@
     <!-- Stream info -->
     <div class="stream-info-bar">
       <div class="si-avatar" style="background:{{ stream.avatar_color }}">
-        {% if stream.avatar %}<img src="/uploads/{{ stream.avatar }}">{% else %}{{ (stream.full_name or stream.username)[0]|upper }}{% endif %}
+        {% if stream.avatar %}<img src="{{ stream.avatar | media_url }}">{% else %}{{ (stream.full_name or stream.username)[0]|upper }}{% endif %}
       </div>
       <div class="si-text">
         <h3>{{ stream.title or 'Canlı Yayın' }}</h3>
@@ -128,7 +128,7 @@
         {% for msg in chat %}
         <div class="chat-msg">
           <div class="chat-av" style="background:{{ msg.avatar_color }}">
-            {% if msg.avatar %}<img src="/uploads/{{ msg.avatar }}">{% else %}{{ msg.username[0]|upper }}{% endif %}
+            {% if msg.avatar %}<img src="{{ msg.avatar | media_url }}">{% else %}{{ msg.username[0]|upper }}{% endif %}
           </div>
           <div class="chat-bubble">
             <strong>@{{ msg.username }}</strong>

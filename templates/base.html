@@ -139,7 +139,7 @@ select.input option{background:#0f0f1e;}
     <div class="dropdown" style="margin-left:0.2rem">
       <div class="nav-avatar" style="background:{{ session.get('avatar_color','#6366f1') }}">
         {% if current_user_obj and current_user_obj.avatar %}
-        <img src="/uploads/{{ current_user_obj.avatar }}" alt="">
+        <img src="{{ current_user_obj.avatar | media_url }}" alt="">
         {% else %}{{ session.get('avatar_letter','?') }}{% endif %}
       </div>
       <div class="dropdown-menu">

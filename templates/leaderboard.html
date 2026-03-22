@@ -24,7 +24,7 @@
     <div class="top3-card {% if i==0 %}first{% endif %}">
       <div style="font-size:1.5rem;margin-bottom:0.4rem">{% if i==0 %}🥇{% elif i==1 %}🥈{% else %}🥉{% endif %}</div>
       <div class="avatar av-md" style="background:{{ pos.avatar_color }};margin:0 auto 0.5rem">
-        {% if pos.avatar %}<img src="/uploads/{{ pos.avatar }}">{% else %}{{ (pos.full_name or pos.username)[0].upper() }}{% endif %}
+        {% if pos.avatar %}<img src="{{ pos.avatar | media_url }}">{% else %}{{ (pos.full_name or pos.username)[0].upper() }}{% endif %}
       </div>
       <strong style="font-size:0.85rem;display:block"><a href="/profile/{{ pos.username }}" style="color:var(--text)">{{ pos.full_name or pos.username }}</a></strong>
       <span style="font-size:0.72rem;color:var(--accent)">{{ pos.xp or 0 }} XP</span>
@@ -39,7 +39,7 @@
     </div>
     <a href="/profile/{{ u.username }}">
       <div class="avatar av-md" style="background:{{ u.avatar_color }}">
-        {% if u.avatar %}<img src="/uploads/{{ u.avatar }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}
+        {% if u.avatar %}<img src="{{ u.avatar | media_url }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}
       </div>
     </a>
     <div class="lb-info">

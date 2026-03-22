@@ -64,7 +64,7 @@
         <div class="stream-thumb">
           <div class="stream-thumb-inner">
             <div class="stream-thumb-av" style="background:{{ s.avatar_color }}">
-              {% if s.avatar %}<img src="/uploads/{{ s.avatar }}">{% else %}{{ (s.full_name or s.username)[0]|upper }}{% endif %}
+              {% if s.avatar %}<img src="{{ s.avatar | media_url }}">{% else %}{{ (s.full_name or s.username)[0]|upper }}{% endif %}
             </div>
             <p style="font-size:0.72rem;color:rgba(255,255,255,0.7);">@{{ s.username }}</p>
           </div>

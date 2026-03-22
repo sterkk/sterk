@@ -12,6 +12,20 @@ try:
     load_dotenv()
 except ImportError:
     pass  # python-dotenv kurulu değilse geç
+
+# Cloudinary
+try:
+    import cloudinary
+    import cloudinary.uploader
+    cloudinary.config(
+        cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', 'dfb2fulx4'),
+        api_key    = os.environ.get('CLOUDINARY_API_KEY', '825291981214412'),
+        api_secret = os.environ.get('CLOUDINARY_API_SECRET', 'vDEOwzrmkTnzajTRprQWheAQ-6s'),
+        secure     = True
+    )
+    HAVE_CLOUDINARY = True
+except ImportError:
+    HAVE_CLOUDINARY = False
 from datetime import datetime, timedelta
 from urllib.parse import quote as url_quote
 from flask import (Flask, render_template, request, redirect,
@@ -40,6 +54,14 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
 app.jinja_env.filters['urlencode'] = url_quote
+
+def media_url_filter(path):
+    """Template filter: Cloudinary veya local URL döndür."""
+    if not path: return ''
+    if str(path).startswith('http'): return path
+    return f'/uploads/{path}'
+
+app.jinja_env.filters['media_url'] = media_url_filter
 
 # Rate Limiter
 if HAVE_LIMITER:
@@ -293,10 +315,31 @@ def needs_mod(uid,c):
     return (not u) or (not u['email_verified'])
 
 def save_file(file, subdir):
-    ext=file.filename.rsplit('.',1)[1].lower()
-    fn=f"{int(datetime.now().timestamp()*1000)}_{secrets.token_hex(4)}.{ext}"
-    d=os.path.join(UPLOAD_FOLDER,subdir); os.makedirs(d,exist_ok=True)
-    file.save(os.path.join(d,fn))
+    ext = file.filename.rsplit('.',1)[1].lower() if '.' in file.filename else 'bin'
+    # Cloudinary varsa oraya yükle
+    if HAVE_CLOUDINARY:
+        try:
+            # Video mu resim mi?
+            resource_type = 'video' if ext in ('mp4','mov','webm','avi') else 'image'
+            # PDF için raw
+            if ext == 'pdf': resource_type = 'raw'
+            result = cloudinary.uploader.upload(
+                file,
+                folder=f"sterk/{subdir}",
+                resource_type=resource_type,
+                public_id=f"{int(datetime.now().timestamp()*1000)}_{secrets.token_hex(4)}"
+            )
+            url = result.get('secure_url','')
+            return url, ext
+        except Exception as e:
+            print(f"Cloudinary hata: {e}")
+            # Hata olursa locale düş
+    # Locale kaydet (fallback)
+    fn = f"{int(datetime.now().timestamp()*1000)}_{secrets.token_hex(4)}.{ext}"
+    d = os.path.join(UPLOAD_FOLDER, subdir)
+    os.makedirs(d, exist_ok=True)
+    file.seek(0)
+    file.save(os.path.join(d, fn))
     return f"{subdir}/{fn}", ext
 
 # ── ŞEMA ─────────────────────────────────────────────────────
@@ -621,6 +664,12 @@ def security_headers(response):
 
 @app.route('/uploads/<path:fn>')
 def uploaded(fn): return send_from_directory(UPLOAD_FOLDER,fn)
+
+def media_url(path):
+    """Cloudinary URL'i mi, local URL mi — doğru döndür."""
+    if not path: return ''
+    if path.startswith('http'): return path
+    return f'/uploads/{path}'
 
 # ── AUTH ─────────────────────────────────────────────────────
 @app.route('/')
@@ -1282,7 +1331,7 @@ def upload_avatar():
     c=get_db()
     try:
         run(c,'UPDATE users SET avatar=%s WHERE id=%s',(path,uid))
-        c.commit(); return jsonify({'success':True,'url':f'/uploads/{path}'})
+        c.commit(); url = path if path.startswith('http') else f'/uploads/{path}'; return jsonify({'success':True,'url':url})
     finally: release_db(c)
 
 @app.route('/upload_cover', methods=['POST'])
@@ -1296,7 +1345,7 @@ def upload_cover():
     c=get_db()
     try:
         run(c,'UPDATE users SET cover_photo=%s WHERE id=%s',(path,uid))
-        c.commit(); return jsonify({'success':True,'url':f'/uploads/{path}'})
+        c.commit(); url = path if path.startswith('http') else f'/uploads/{path}'; return jsonify({'success':True,'url':url})
     finally: release_db(c)
 
 # ── SOSYAL ───────────────────────────────────────────────────
