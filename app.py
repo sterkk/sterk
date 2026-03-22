@@ -85,7 +85,9 @@ DB = dict(
     user     = os.environ.get('DB_USER','postgres'),
     password = os.environ.get('DB_PASSWORD',''),
 )
-DATABASE_URL = os.environ.get('DATABASE_URL','')
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Connection pool
 _pool = None
