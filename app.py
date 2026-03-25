@@ -12,20 +12,6 @@ try:
     load_dotenv()
 except ImportError:
     pass  # python-dotenv kurulu değilse geç
-
-# Cloudinary
-try:
-    import cloudinary
-    import cloudinary.uploader
-    cloudinary.config(
-        cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', 'dfb2fulx4'),
-        api_key    = os.environ.get('CLOUDINARY_API_KEY', '825291981214412'),
-        api_secret = os.environ.get('CLOUDINARY_API_SECRET', 'vDEOwzrmkTnzajTRprQWheAQ-6s'),
-        secure     = True
-    )
-    HAVE_CLOUDINARY = True
-except ImportError:
-    HAVE_CLOUDINARY = False
 from datetime import datetime, timedelta
 from urllib.parse import quote as url_quote
 from flask import (Flask, render_template, request, redirect,
@@ -55,14 +41,6 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
 app.jinja_env.filters['urlencode'] = url_quote
 
-def media_url_filter(path):
-    """Template filter: Cloudinary veya local URL döndür."""
-    if not path: return ''
-    if str(path).startswith('http'): return path
-    return f'/uploads/{path}'
-
-app.jinja_env.filters['media_url'] = media_url_filter
-
 # Rate Limiter
 if HAVE_LIMITER:
     limiter = Limiter(get_remote_address, app=app,
@@ -85,9 +63,7 @@ DB = dict(
     user     = os.environ.get('DB_USER','postgres'),
     password = os.environ.get('DB_PASSWORD',''),
 )
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+DATABASE_URL = os.environ.get('DATABASE_URL','')
 
 # Connection pool
 _pool = None
@@ -317,31 +293,10 @@ def needs_mod(uid,c):
     return (not u) or (not u['email_verified'])
 
 def save_file(file, subdir):
-    ext = file.filename.rsplit('.',1)[1].lower() if '.' in file.filename else 'bin'
-    # Cloudinary varsa oraya yükle
-    if HAVE_CLOUDINARY:
-        try:
-            # Video mu resim mi?
-            resource_type = 'video' if ext in ('mp4','mov','webm','avi') else 'image'
-            # PDF için raw
-            if ext == 'pdf': resource_type = 'raw'
-            result = cloudinary.uploader.upload(
-                file,
-                folder=f"sterk/{subdir}",
-                resource_type=resource_type,
-                public_id=f"{int(datetime.now().timestamp()*1000)}_{secrets.token_hex(4)}"
-            )
-            url = result.get('secure_url','')
-            return url, ext
-        except Exception as e:
-            print(f"Cloudinary hata: {e}")
-            # Hata olursa locale düş
-    # Locale kaydet (fallback)
-    fn = f"{int(datetime.now().timestamp()*1000)}_{secrets.token_hex(4)}.{ext}"
-    d = os.path.join(UPLOAD_FOLDER, subdir)
-    os.makedirs(d, exist_ok=True)
-    file.seek(0)
-    file.save(os.path.join(d, fn))
+    ext=file.filename.rsplit('.',1)[1].lower()
+    fn=f"{int(datetime.now().timestamp()*1000)}_{secrets.token_hex(4)}.{ext}"
+    d=os.path.join(UPLOAD_FOLDER,subdir); os.makedirs(d,exist_ok=True)
+    file.save(os.path.join(d,fn))
     return f"{subdir}/{fn}", ext
 
 # ── ŞEMA ─────────────────────────────────────────────────────
@@ -594,6 +549,16 @@ CREATE TABLE IF NOT EXISTS email_verifications(
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   token VARCHAR(100), created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS feedback(
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  feedback_type VARCHAR(20) NOT NULL,
+  subject VARCHAR(200),
+  content TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'open',
+  admin_reply TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 """
 
 def init_db():
@@ -641,7 +606,7 @@ def ctx():
                 um=unread_m(uid, conn=c)
                 cu=get_user(uid, conn=c)
             finally:
-                c.close()
+                release_db(c)
         except Exception:
             pass  # DB hatası olsa bile sayfa yüklensin
     return dict(
@@ -666,12 +631,6 @@ def security_headers(response):
 
 @app.route('/uploads/<path:fn>')
 def uploaded(fn): return send_from_directory(UPLOAD_FOLDER,fn)
-
-def media_url(path):
-    """Cloudinary URL'i mi, local URL mi — doğru döndür."""
-    if not path: return ''
-    if path.startswith('http'): return path
-    return f'/uploads/{path}'
 
 # ── AUTH ─────────────────────────────────────────────────────
 @app.route('/')
@@ -729,7 +688,7 @@ def register():
             session['username']=u['username']
             session['avatar_color']=u['avatar_color']
             session['avatar_letter']=av_letter(u)
-            return jsonify({'success':True,'redirect':url_for('profile_setup'),'_dev_token':tok})
+            return jsonify({'success':True,'redirect':url_for('profile_setup')})
         except Exception as e:
             c.rollback()
             msg=str(e)
@@ -1088,25 +1047,30 @@ def short_comments(sid):
 def create_story():
     if 'user_id' not in session: return jsonify({'error':'Giriş gerekli'}),401
     uid=session['user_id']
-    d=request.get_json(silent=True) or {}
-    content=(d.get('content') or '').strip()
-    media_url=None; media_type=None
+    media_url=None; media_type=None; bg_color='#7c3aed'
 
-    # Dosya varsa form-data
-    if not d and 'file' in request.files:
-        f=request.files['file']
-        if f and ok_file(f.filename):
-            path,ext=save_file(f,'stories')
-            media_url=path
-            media_type='video' if ext in ('mp4','mov') else 'image'
+    # FormData (hem dosyalı hem dosyasız)
+    if request.content_type and 'multipart' in request.content_type:
         content=(request.form.get('content') or '').strip()
+        bg_color=request.form.get('bg_color','#7c3aed')
+        if 'file' in request.files:
+            f=request.files['file']
+            if f and f.filename and ok_file(f.filename):
+                path,ext=save_file(f,'stories')
+                media_url=path
+                media_type='video' if ext in ('mp4','mov') else 'image'
+    else:
+        # JSON ile metin hikayesi
+        d=request.get_json(silent=True) or {}
+        content=(d.get('content') or '').strip()
+        bg_color=d.get('bg_color','#7c3aed')
 
     if not content and not media_url: return jsonify({'error':'İçerik veya medya gerekli'}),400
     exp=datetime.now()+timedelta(hours=24)
     c=get_db()
     try:
         run(c,'INSERT INTO stories(user_id,content,bg_color,media_url,media_type,expires_at) VALUES(%s,%s,%s,%s,%s,%s)',
-            (uid,content,d.get('bg_color','#7c3aed'),media_url,media_type,exp))
+            (uid,content,bg_color,media_url,media_type,exp))
         c.commit(); return jsonify({'success':True})
     finally: release_db(c)
 
@@ -1333,7 +1297,7 @@ def upload_avatar():
     c=get_db()
     try:
         run(c,'UPDATE users SET avatar=%s WHERE id=%s',(path,uid))
-        c.commit(); url = path if path.startswith('http') else f'/uploads/{path}'; return jsonify({'success':True,'url':url})
+        c.commit(); return jsonify({'success':True,'url':f'/uploads/{path}'})
     finally: release_db(c)
 
 @app.route('/upload_cover', methods=['POST'])
@@ -1347,7 +1311,7 @@ def upload_cover():
     c=get_db()
     try:
         run(c,'UPDATE users SET cover_photo=%s WHERE id=%s',(path,uid))
-        c.commit(); url = path if path.startswith('http') else f'/uploads/{path}'; return jsonify({'success':True,'url':url})
+        c.commit(); return jsonify({'success':True,'url':f'/uploads/{path}'})
     finally: release_db(c)
 
 # ── SOSYAL ───────────────────────────────────────────────────
@@ -1576,11 +1540,18 @@ def events():
 @app.route('/events/create', methods=['POST'])
 def create_event():
     if 'user_id' not in session: return jsonify({'error':'Giriş gerekli'}),401
-    d=request.get_json(silent=True) or {}; uid=session['user_id']; c=get_db()
+    d=request.get_json(silent=True) or {}; uid=session['user_id']
+    title=(d.get('title') or '').strip()
+    if not title: return jsonify({'error':'Etkinlik adı zorunlu'}),400
+    edate=d.get('event_date','')
+    if not edate: return jsonify({'error':'Tarih zorunlu'}),400
+    c=get_db()
     try:
         run(c,'INSERT INTO events(user_id,title,description,location,event_date,event_time) VALUES(%s,%s,%s,%s,%s,%s)',
-            (uid,d.get('title'),d.get('description'),d.get('location'),d.get('event_date'),d.get('event_time')))
+            (uid,title,d.get('description'),d.get('location'),edate,d.get('event_time')))
         c.commit(); return jsonify({'success':True})
+    except Exception as e:
+        c.rollback(); return jsonify({'error':f'Etkinlik oluşturma hatası: {str(e)[:100]}'}),500
     finally: release_db(c)
 
 @app.route('/events/<int:eid>/attend', methods=['POST'])
@@ -1816,10 +1787,10 @@ def resend_verification():
         run(c,'DELETE FROM email_verifications WHERE user_id=%s',(uid,))
         run(c,'INSERT INTO email_verifications(user_id,token) VALUES(%s,%s)',(uid,tok))
         c.commit()
-        # Production ortamında doğru URL kullan
         base_url = request.host_url.rstrip('/')
         url = f"{base_url}/verify_email/{tok}"
-        return jsonify({'success':True,'debug_url':url})
+        # TODO: Gerçek e-posta gönderimi entegre edilecek (SendGrid/Mailgun)
+        return jsonify({'success':True,'message':'Doğrulama bağlantısı oluşturuldu'})
     finally: release_db(c)
 
 # ── SERTİFİKA ────────────────────────────────────────────────
@@ -2030,11 +2001,57 @@ def ai_suggest_users():
     except: return jsonify({'users':[]})
     finally: release_db(c)
 
+# ── GERİ BİLDİRİM (İstek/Öneri/Şikayet) ────────────────────
+@app.route('/feedback')
+def feedback_page():
+    if 'user_id' not in session: return redirect(url_for('login'))
+    uid=session['user_id']; c=get_db()
+    try:
+        my=run(c,'SELECT * FROM feedback WHERE user_id=%s ORDER BY created_at DESC LIMIT 20',(uid,))
+        return render_template('feedback.html',feedbacks=my or [],user=get_user(uid))
+    finally: release_db(c)
+
+@app.route('/feedback/submit', methods=['POST'])
+def submit_feedback():
+    if 'user_id' not in session: return jsonify({'error':'Giriş gerekli'}),401
+    d=request.get_json(silent=True) or {}; uid=session['user_id']
+    ftype=(d.get('type') or '').strip()
+    subject=(d.get('subject') or '').strip()
+    content=(d.get('content') or '').strip()
+    if ftype not in ('istek','oneri','sikayet'): return jsonify({'error':'Geçersiz geri bildirim türü'}),400
+    if not content: return jsonify({'error':'İçerik zorunlu'}),400
+    c=get_db()
+    try:
+        run(c,'INSERT INTO feedback(user_id,feedback_type,subject,content) VALUES(%s,%s,%s,%s)',
+            (uid,ftype,subject,content))
+        c.commit(); return jsonify({'success':True})
+    except Exception as e:
+        c.rollback(); return jsonify({'error':str(e)}),500
+    finally: release_db(c)
+
+@app.route('/admin/feedbacks')
+def admin_feedbacks():
+    if 'user_id' not in session or not is_admin(session['user_id']): return redirect(url_for('feed'))
+    c=get_db()
+    try:
+        rows=run(c,'SELECT f.*,u.username,u.full_name FROM feedback f JOIN users u ON f.user_id=u.id ORDER BY f.created_at DESC LIMIT 50')
+        return jsonify([dict(r) for r in (rows or [])])
+    finally: release_db(c)
+
+@app.route('/admin/feedback/<int:fid>/reply', methods=['POST'])
+def admin_reply_feedback(fid):
+    if 'user_id' not in session or not is_admin(session['user_id']): return jsonify({'error':'Yetkisiz'}),403
+    d=request.get_json(silent=True) or {}; c=get_db()
+    try:
+        run(c,'UPDATE feedback SET admin_reply=%s,status=%s WHERE id=%s',(d.get('reply',''),'replied',fid))
+        c.commit(); return jsonify({'success':True})
+    finally: release_db(c)
+
 # ── HATA SAYFALARI ───────────────────────────────────────────
 @app.errorhandler(404)
 def e404(e): return render_template('404.html'),404
 @app.errorhandler(500)
-def e500(e): return jsonify({'error':'Sunucu hatası','detail':str(e)}),500
+def e500(e): return render_template('404.html'),500
 
 # ── BOT SİSTEMİ ──────────────────────────────────────────────
 BOT_DATA = [

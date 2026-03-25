@@ -58,7 +58,18 @@
 {% endblock %}
 {% block scripts %}
 <script>
-async function attend(id,status,btn){const r=await fetch(`/events/${id}/attend`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(r.ok){btn.textContent=status==='going'?'✓ Katılıyorum':'✓ Belki';showToast('Katılım güncellendi','success');}}
-async function createEvent(){const r=await fetch('/events/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:document.getElementById('eTitle').value,description:document.getElementById('eDesc').value,location:document.getElementById('eLoc').value,event_date:document.getElementById('eDate').value,event_time:document.getElementById('eTime').value})});if(r.ok){closeModal('createEventModal');showToast('Etkinlik oluşturuldu!','success');setTimeout(()=>location.reload(),700);}}
+async function attend(id,status,btn){const r=await fetch(`/events/${id}/attend`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(r.ok){btn.textContent=status==='going'?'✓ Katılıyorum':'✓ Belki';showToast('Katılım güncellendi','success');}else{showToast('Hata oluştu','error');}}
+async function createEvent(){
+  const title=document.getElementById('eTitle').value.trim();
+  const edate=document.getElementById('eDate').value;
+  if(!title){showToast('Etkinlik adı zorunlu','error');return;}
+  if(!edate){showToast('Tarih zorunlu','error');return;}
+  try{
+    const r=await fetch('/events/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,description:document.getElementById('eDesc').value,location:document.getElementById('eLoc').value,event_date:edate,event_time:document.getElementById('eTime').value})});
+    const d=await r.json();
+    if(r.ok&&d.success){closeModal('createEventModal');showToast('Etkinlik oluşturuldu!','success');setTimeout(()=>location.reload(),700);}
+    else{showToast(d.error||'Etkinlik oluşturulamadı','error');}
+  }catch(e){showToast('Bağlantı hatası','error');}
+}
 </script>
 {% endblock %}

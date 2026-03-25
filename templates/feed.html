@@ -63,7 +63,7 @@
     <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.7rem">
       <a href="/profile/{{ user.username }}">
         <div class="avatar av-md" style="background:{{ user.avatar_color }}">
-          {% if user.avatar %}<img src="{{ user.avatar | media_url }}">{% else %}{{ get_avatar_letter(user) }}{% endif %}
+          {% if user.avatar %}<img src="/uploads/{{ user.avatar }}">{% else %}{{ get_avatar_letter(user) }}{% endif %}
         </div>
       </a>
       <div>
@@ -111,7 +111,7 @@
     <div class="story-item" onclick="viewStory({{ s.id }},'{{ s.content|replace("'","\\'") }}','{{ s.bg_color }}','{{ s.username }}','{{ s.avatar_color }}','{{ s.avatar or "" }}')">
       <div class="story-ring {% if s.viewed %}viewed{% endif %}">
         <div class="story-inner" style="background:{{ s.avatar_color }}">
-          {% if s.avatar %}<img src="{{ s.avatar | media_url }}">{% else %}{{ (s.full_name or s.username)[0].upper() }}{% endif %}
+          {% if s.avatar %}<img src="/uploads/{{ s.avatar }}">{% else %}{{ (s.full_name or s.username)[0].upper() }}{% endif %}
         </div>
       </div>
       <span class="story-name">{{ s.username }}</span>
@@ -122,13 +122,14 @@
   <div class="composer">
     <div style="display:flex;gap:0.7rem">
       <div class="avatar av-md" style="background:{{ user.avatar_color }}">
-        {% if user.avatar %}<img src="{{ user.avatar | media_url }}">{% else %}{{ get_avatar_letter(user) }}{% endif %}
+        {% if user.avatar %}<img src="/uploads/{{ user.avatar }}">{% else %}{{ get_avatar_letter(user) }}{% endif %}
       </div>
       <textarea id="postContent" placeholder="Ne düşünüyorsun? #etiket @kullanıcı ekleyebilirsin..." oninput="updateCC(this)"></textarea>
     </div>
     <!-- Media preview -->
     <div id="mediaPreview" style="display:none;margin-top:0.6rem;position:relative">
-      <img id="mediaPreviewImg" style="max-height:200px;border-radius:10px;max-width:100%">
+      <img id="mediaPreviewImg" style="max-height:200px;border-radius:10px;max-width:100%;display:none">
+      <video id="mediaPreviewVid" style="max-height:200px;border-radius:10px;max-width:100%;display:none" controls></video>
       <button onclick="clearMedia()" style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.6);border:none;color:white;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.8rem">✕</button>
     </div>
     <div class="composer-footer">
@@ -159,7 +160,7 @@
     <div class="post-header">
       <a href="/profile/{{ post.username }}">
         <div class="avatar av-md" style="background:{{ post.avatar_color }}">
-          {% if post.avatar %}<img src="{{ post.avatar | media_url }}">{% else %}{{ (post.full_name or post.username)[0].upper() }}{% endif %}
+          {% if post.avatar %}<img src="/uploads/{{ post.avatar }}">{% else %}{{ (post.full_name or post.username)[0].upper() }}{% endif %}
         </div>
       </a>
       <div class="post-meta" style="flex:1;min-width:0">
@@ -181,10 +182,11 @@
     {% endif %}
     <div class="post-content">{{ post.content }}</div>
     {% if post.media_url %}
-      {% if post.media_type == 'video' %}
-      <video src="{{ post.media_url | media_url }}" controls style="width:100%;border-radius:12px;max-height:400px;margin-bottom:0.8rem"></video>
+      {% set ext = post.media_url.rsplit('.', 1)[-1].lower() if '.' in post.media_url else '' %}
+      {% if post.media_type == 'video' or ext in ['mp4', 'mov', 'webm', 'avi'] %}
+      <video src="/uploads/{{ post.media_url }}" controls playsinline class="post-video" style="width:100%;border-radius:12px;max-height:400px;margin-bottom:0.8rem;background:#000"></video>
       {% else %}
-      <img src="{{ post.media_url | media_url }}" class="post-img" onclick="window.open('/uploads/{{ post.media_url }}')">
+      <img src="/uploads/{{ post.media_url }}" class="post-img" onclick="openLightbox('/uploads/{{ post.media_url }}')" loading="lazy">
       {% endif %}
     {% endif %}
     <div class="post-actions" id="pa-{{ post.id }}">
@@ -199,7 +201,7 @@
     <div class="comments-area" id="cmt-{{ post.id }}">
       <div class="cmt-list"></div>
       <div style="display:flex;gap:0.5rem;margin-top:0.7rem">
-        <div class="avatar av-sm" style="background:{{ user.avatar_color }}">{% if user.avatar %}<img src="{{ user.avatar | media_url }}">{% else %}{{ get_avatar_letter(user) }}{% endif %}</div>
+        <div class="avatar av-sm" style="background:{{ user.avatar_color }}">{% if user.avatar %}<img src="/uploads/{{ user.avatar }}">{% else %}{{ get_avatar_letter(user) }}{% endif %}</div>
         <input class="comment-input" placeholder="Yorum yaz..." onkeydown="if(event.key==='Enter')submitComment({{ post.id }})">
         <button class="btn btn-primary btn-sm" onclick="submitComment({{ post.id }})">↑</button>
       </div>
@@ -221,7 +223,7 @@
     {% for u in suggested %}
     <div class="sug-user">
       <a href="/profile/{{ u.username }}">
-        <div class="avatar av-sm" style="background:{{ u.avatar_color }}">{% if u.avatar %}<img src="{{ u.avatar | media_url }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}</div>
+        <div class="avatar av-sm" style="background:{{ u.avatar_color }}">{% if u.avatar %}<img src="/uploads/{{ u.avatar }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}</div>
       </a>
       <div class="sug-info">
         <strong><a href="/profile/{{ u.username }}" style="color:var(--text)">{{ u.full_name or u.username }}</a></strong>
@@ -304,8 +306,26 @@
 {% block scripts %}
 <script>
 function updateCC(ta){const l=ta.value.length;const el=document.getElementById('charCount');el.textContent=`${l}/1000`;el.style.color=l>900?(l>=1000?'var(--danger)':'var(--warning)'):'var(--muted)';document.getElementById('submitBtn').disabled=l===0||l>1000;}
-function previewMedia(inp){if(!inp.files[0])return;const r=new FileReader();r.onload=e=>{document.getElementById('mediaPreviewImg').src=e.target.result;document.getElementById('mediaPreview').style.display='block';};r.readAsDataURL(inp.files[0]);}
-function clearMedia(){document.getElementById('mediaFile').value='';document.getElementById('mediaPreview').style.display='none';}
+function previewMedia(inp){
+  if(!inp.files[0])return;
+  const f=inp.files[0];
+  const isVideo=f.type.startsWith('video/');
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=document.getElementById('mediaPreviewImg');
+    const vid=document.getElementById('mediaPreviewVid');
+    if(isVideo){img.style.display='none';vid.src=e.target.result;vid.style.display='block';}
+    else{vid.style.display='none';img.src=e.target.result;img.style.display='block';}
+    document.getElementById('mediaPreview').style.display='block';
+  };
+  r.readAsDataURL(f);
+}
+function clearMedia(){
+  document.getElementById('mediaFile').value='';
+  document.getElementById('mediaPreview').style.display='none';
+  document.getElementById('mediaPreviewImg').style.display='none';
+  document.getElementById('mediaPreviewVid').style.display='none';
+}
 async function submitPost(){
   const btn=document.getElementById('submitBtn');
   const content=document.getElementById('postContent').value.trim();
@@ -410,17 +430,12 @@ async function submitStory(){
   const file=document.getElementById('storyFile').files[0];
   if(!text&&!file){showToast('Metin veya fotoğraf ekle','error');return;}
   const bg=document.getElementById('storyPreviewBox').style.background||'#6366f1';
-  let body, headers={};
-  if(file){
-    const fd=new FormData();
-    fd.append('content',text);fd.append('bg_color',bg);fd.append('file',file);
-    body=fd;
-  } else {
-    headers={'Content-Type':'application/json'};
-    body=JSON.stringify({content:text,bg_color:bg});
-  }
+  const fd=new FormData();
+  fd.append('content',text);
+  fd.append('bg_color',bg);
+  if(file) fd.append('file',file);
   try{
-    const r=await fetch('/story',{method:'POST',headers,body});
+    const r=await fetch('/story',{method:'POST',body:fd});
     const d=await r.json();
     if(d.success){showToast('Hikaye paylaşıldı! 24 saat görünür.','success');document.getElementById('storyModal').style.display='none';setTimeout(()=>location.reload(),800);}
     else showToast(d.error||'Hata','error');

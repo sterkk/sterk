@@ -2,7 +2,9 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Sterk — Gerçek bağlantılar, güçlü topluluklar. Hesabını oluştur veya giriş yap.">
 <title>{% if mode=='register' %}Üye Ol{% else %}Giriş Yap{% endif %} — Sterk</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='900'>S</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -70,20 +72,21 @@ select.input option{background:#0f0f1e;}
         <li>Yanıltıcı bilgi içeren hesaplar <strong>kalıcı olarak kapatılır</strong>.</li>
       </ul>
     </div>
+    <form id="registerForm" onsubmit="event.preventDefault();doReg()" autocomplete="on">
     <div class="grid2">
-      <div class="field"><label>Ad Soyad <span class="req">*</span></label><input id="fn" class="input" placeholder="Gerçek adın"></div>
-      <div class="field"><label>Kullanıcı Adı <span class="req">*</span></label><input id="un" class="input" placeholder="sterk_adi"></div>
+      <div class="field"><label>Ad Soyad <span class="req">*</span></label><input id="fn" name="full_name" class="input" placeholder="Gerçek adın" autocomplete="name"></div>
+      <div class="field"><label>Kullanıcı Adı <span class="req">*</span></label><input id="un" name="username" class="input" placeholder="sterk_adi" autocomplete="username"></div>
     </div>
-    <div class="field"><label>E-posta <span class="req">*</span></label><input id="em" class="input" type="email" placeholder="email@ornek.com"></div>
+    <div class="field"><label>E-posta <span class="req">*</span></label><input id="em" name="email" class="input" type="email" placeholder="email@ornek.com" autocomplete="email"></div>
     <div class="grid2">
-      <div class="field"><label>Yaş <span class="req">*</span> <span style="color:#64748b;font-size:0.68rem">(min. 13)</span></label><input id="age" class="input" type="number" min="13" max="100" placeholder="Gerçek yaşın"></div>
+      <div class="field"><label>Yaş <span class="req">*</span> <span style="color:#64748b;font-size:0.68rem">(min. 13)</span></label><input id="age" name="age" class="input" type="number" min="13" max="100" placeholder="Gerçek yaşın"></div>
       <div class="field"><label>Cinsiyet <span class="req">*</span></label>
-        <select id="gender" class="input"><option value="">— Seç —</option><option>Erkek</option><option>Kadın</option><option>Diğer</option><option value="Belirtmek İstemiyorum">Belirtmek İstemiyorum</option></select>
+        <select id="gender" name="gender" class="input"><option value="">— Seç —</option><option>Erkek</option><option>Kadın</option><option>Diğer</option><option value="Belirtmek İstemiyorum">Belirtmek İstemiyorum</option></select>
       </div>
     </div>
     <div class="field">
       <label>Şifre <span class="req">*</span></label>
-      <input id="pw" class="input" type="password" placeholder="En az 8 karakter" oninput="checkPw(this.value)">
+      <input id="pw" name="password" class="input" type="password" placeholder="En az 8 karakter" autocomplete="new-password" oninput="checkPw(this.value)">
       <div class="pw-bar-wrap"><div class="pw-bar" id="pwb"></div></div>
       <div class="pw-hint" id="pwh">En az 8 karakter, harf + rakam karışık olsun</div>
     </div>
@@ -92,14 +95,17 @@ select.input option{background:#0f0f1e;}
       <input type="checkbox" id="terms" style="margin-top:3px;accent-color:#6366f1;flex-shrink:0">
       <span style="font-size:0.73rem;color:#64748b;line-height:1.5">Girdiğim bilgilerin <strong style="color:#a5b4fc">gerçek ve doğru</strong> olduğunu, yanlış bilgi girişinin hesabımın askıya alınmasına yol açabileceğini anlıyorum ve onaylıyorum.</span>
     </label>
-    <button class="btn" id="submitBtn" onclick="doReg()">Üye Ol → Kategorini Seç</button>
+    <button class="btn" id="submitBtn" type="submit">Üye Ol → Kategorini Seç</button>
     <p class="note">Zaten hesabın var mı? <a href="/login">Giriş yap</a></p>
+    </form>
 
     {% else %}
-    <div class="field"><label>Kullanıcı Adı veya E-posta</label><input id="lu" class="input" placeholder="kullanici veya email@ornek.com" autocomplete="username"></div>
-    <div class="field"><label>Şifre</label><input id="lp" class="input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn" id="loginBtn" onclick="doLogin()">Giriş Yap →</button>
+    <form id="loginForm" onsubmit="event.preventDefault();doLogin()" autocomplete="on">
+    <div class="field"><label>Kullanıcı Adı veya E-posta</label><input id="lu" name="username" class="input" placeholder="kullanici veya email@ornek.com" autocomplete="username"></div>
+    <div class="field"><label>Şifre</label><input id="lp" name="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn" id="loginBtn" type="submit">Giriş Yap →</button>
     <p class="note">Hesabın yok mu? <a href="/register">Ücretsiz üye ol</a></p>
+    </form>
     {% endif %}
   </div>
 </div>
