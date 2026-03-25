@@ -68,7 +68,7 @@
   <!-- COVER -->
   <div class="cover-area" {% if current_user.id == profile_user.id %}onclick="document.getElementById('coverInput').click()"{% endif %}>
     {% if profile_user.cover_photo %}
-    <img src="{{ profile_user.cover_photo | media_url }}" alt="Kapak">
+    <img src="/uploads/{{ profile_user.cover_photo }}" alt="Kapak">
     {% else %}
     <div class="cover-placeholder"></div>
     {% endif %}
@@ -82,7 +82,7 @@
   <div class="profile-header">
     <div class="avatar-wrap">
       <div class="avatar-xl" style="background:{{ profile_user.avatar_color }}">
-        {% if profile_user.avatar %}<img src="{{ profile_user.avatar | media_url }}" alt="">
+        {% if profile_user.avatar %}<img src="/uploads/{{ profile_user.avatar }}" alt="">
         {% else %}{{ (profile_user.full_name or profile_user.username)[0].upper() }}{% endif %}
       </div>
       {% if current_user.id == profile_user.id %}
@@ -296,7 +296,7 @@
         {% for post in posts %}
         {% if post.media_url %}
         <div class="media-thumb" onclick="window.open('/uploads/{{ post.media_url }}')">
-          <img src="{{ post.media_url | media_url }}" alt="Medya" loading="lazy">
+          <img src="/uploads/{{ post.media_url }}" alt="Medya" loading="lazy">
         </div>
         {% endif %}
         {% else %}
@@ -314,7 +314,7 @@
         <div class="post-card" id="post-{{ post.id }}">
           <div class="post-header">
             <div class="avatar av-md" style="background:{{ post.avatar_color }}">
-              {% if post.avatar %}<img src="{{ post.avatar | media_url }}">{% else %}{{ (post.full_name or post.username)[0].upper() }}{% endif %}
+              {% if post.avatar %}<img src="/uploads/{{ post.avatar }}">{% else %}{{ (post.full_name or post.username)[0].upper() }}{% endif %}
             </div>
             <div class="post-meta" style="flex:1;min-width:0">
               <strong>{{ post.full_name or post.username }}{% if post.is_verified %}<span class="verified">✓</span>{% endif %}</strong>
@@ -327,9 +327,9 @@
           <div class="post-content">{{ post.content }}</div>
           {% if post.media_url %}
             {% if post.media_type == 'video' %}
-            <video src="{{ post.media_url | media_url }}" controls style="width:100%;border-radius:12px;max-height:360px;margin-bottom:0.8rem"></video>
+            <video src="/uploads/{{ post.media_url }}" controls style="width:100%;border-radius:12px;max-height:360px;margin-bottom:0.8rem"></video>
             {% else %}
-            <img src="{{ post.media_url | media_url }}" class="post-img">
+            <img src="/uploads/{{ post.media_url }}" class="post-img">
             {% endif %}
           {% endif %}
           <div class="post-actions" id="pa-{{ post.id }}">
@@ -345,7 +345,7 @@
             <div class="cmt-list"></div>
             <div style="display:flex;gap:0.5rem;margin-top:0.7rem">
               <div class="avatar av-sm" style="background:{{ current_user_obj.avatar_color }}">
-                {% if current_user_obj.avatar %}<img src="{{ current_user_obj.avatar | media_url }}">
+                {% if current_user_obj.avatar %}<img src="/uploads/{{ current_user_obj.avatar }}">
                 {% else %}{{ (current_user_obj.full_name or current_user_obj.username)[0].upper() }}{% endif %}
               </div>
               <input class="comment-input" placeholder="Yorum yaz..." onkeydown="if(event.key==='Enter')submitComment({{ post.id }})">

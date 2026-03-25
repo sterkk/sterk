@@ -10,7 +10,7 @@
 .msg-bubble.mine{align-self:flex-end;flex-direction:row-reverse;}
 .bubble-content{padding:0.6rem 0.9rem;border-radius:14px;font-size:0.88rem;line-height:1.5;}
 .msg-bubble:not(.mine) .bubble-content{background:var(--card);border:1px solid var(--border);}
-.msg-bubble.mine .bubble-content{background:var(--gradient);color:white;}
+.msg-bubble.mine .bubble-content{background:var(--grad);color:white;}
 .msg-time{font-size:0.65rem;color:var(--muted);margin-top:0.2rem;align-self:flex-end;}
 .msg-input-row{display:flex;gap:0.6rem;padding:0.8rem 0 0;border-top:1px solid var(--border);margin-top:0.8rem;}
 .msg-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;padding:0.7rem 1rem;outline:none;resize:none;min-height:44px;}
@@ -22,7 +22,7 @@
 <div class="conv-wrap">
     <div class="conv-header">
         <a href="/profile/{{ other.username }}">
-            <div class="avatar avatar-sm" style="background:{{ other.avatar_color }}">{{ get_avatar_letter(other) }}</div>
+            <div class="avatar av-md" style="background:{{ other.avatar_color }};border-radius:50%">{% if other.avatar %}<img src="/uploads/{{ other.avatar }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">{% else %}{{ (other.full_name or other.username)[0].upper() }}{% endif %}</div>
         </a>
         <div>
             <strong><a href="/profile/{{ other.username }}" style="color:var(--text)">{{ other.full_name or other.username }}</a></strong>
@@ -34,7 +34,7 @@
         {% for m in msgs %}
         <div class="msg-bubble {% if m.sender_id == session.user_id %}mine{% endif %}">
             {% if m.sender_id != session.user_id %}
-            <div class="avatar avatar-sm" style="background:{{ m.avatar_color }}">{{ (m.full_name or m.username)[0].upper() }}</div>
+            <div class="avatar av-sm" style="background:{{ m.avatar_color }};border-radius:50%">{% if m.avatar %}<img src="/uploads/{{ m.avatar }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">{% else %}{{ (m.full_name or m.username)[0].upper() }}{% endif %}</div>
             {% endif %}
             <div>
                 <div class="bubble-content">{{ m.content }}</div>

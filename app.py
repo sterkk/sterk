@@ -1186,8 +1186,10 @@ def profile(username):
         if not pu: return render_template('404.html'),404
         uid=session['user_id']
         if uid!=pu['id']:
-            run(c,'INSERT INTO profile_views(viewer_id,viewed_id) VALUES(%s,%s)',(uid,pu['id']))
-            c.commit()
+            try:
+                run(c,'INSERT INTO profile_views(viewer_id,viewed_id) VALUES(%s,%s)',(uid,pu['id']))
+                c.commit()
+            except: c.rollback()
         tab=request.args.get('tab','posts')
         bsel='''SELECT p.*,u.username,u.full_name,u.avatar_color,u.avatar,u.is_verified,
             (SELECT COUNT(*) FROM likes WHERE post_id=p.id) as like_count,
@@ -1214,14 +1216,25 @@ def profile(username):
         vc=run(c,'SELECT COUNT(*) as n FROM profile_views WHERE viewed_id=%s',(pu['id'],),one=True)['n']
         can_ch,days_l,_=cat_lock(pu['id'],c)
 
+        # Ortak takip
+        common_follows=[]
+        if uid!=pu['id']:
+            try:
+                common_follows=run(c,'''SELECT u.username FROM follows f1
+                    JOIN follows f2 ON f1.followed_id=f2.followed_id
+                    JOIN users u ON u.id=f1.followed_id
+                    WHERE f1.follower_id=%s AND f2.follower_id=%s AND f1.status='active' AND f2.status='active'
+                    LIMIT 5''',(uid,pu['id'])) or []
+            except: common_follows=[]
+
         badges=[]
-        if pu['is_verified']: badges.append({'icon':'💎','name':'Doğrulanmış'})
-        if fc>=1000: badges.append({'icon':'🌟','name':'Fenomen'})
-        elif fc>=100: badges.append({'icon':'⭐','name':'Popüler'})
+        if pu['is_verified']: badges.append({'icon':'💎','name':'Doğrulanmış','desc':'Doğrulanmış hesap'})
+        if fc>=1000: badges.append({'icon':'🌟','name':'Fenomen','desc':'1000+ takipçi'})
+        elif fc>=100: badges.append({'icon':'⭐','name':'Popüler','desc':'100+ takipçi'})
         pc=run(c,'SELECT COUNT(*) as n FROM posts WHERE user_id=%s',(pu['id'],),one=True)['n']
-        if pc>=50: badges.append({'icon':'🔥','name':'Aktif'})
-        if pu['bio'] and pu['full_name']: badges.append({'icon':'✅','name':'Tam Profil'})
-        if pu.get('is_bot'): badges.append({'icon':'🤖','name':'Bot'})
+        if pc>=50: badges.append({'icon':'🔥','name':'Aktif','desc':'50+ gönderi'})
+        if pu['bio'] and pu['full_name']: badges.append({'icon':'✅','name':'Tam Profil','desc':'Profil tamamlanmış'})
+        if pu.get('is_bot'): badges.append({'icon':'🤖','name':'Bot','desc':'Bot hesap'})
 
         return render_template('profile.html',
             profile_user=pu,tags=tags or [],posts=posts or [],
@@ -1229,7 +1242,8 @@ def profile(username):
             follower_count=fc,following_count=fgc,
             is_following=bool(isf),current_user=get_user(uid),
             badges=badges,blocked=bool(blk),tab=tab,
-            view_count=vc,can_change_cat=can_ch,days_left=days_l,certs=certs or [])
+            view_count=vc,can_change_cat=can_ch,days_left=days_l,certs=certs or [],
+            common_follows=common_follows)
     finally: release_db(c)
 
 @app.route('/edit_profile', methods=['GET','POST'])
