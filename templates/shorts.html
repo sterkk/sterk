@@ -89,9 +89,9 @@
     {% if shorts %}
     <div class="shorts-grid" id="shortsGrid">
       {% for s in shorts %}
-      <div class="short-card" onclick="openModal({{ loop.index0 }})">
+      <div class="short-card" onclick="openShortModal({{ loop.index0 }})">
         <div class="short-video-wrap">
-          <video src="{{ s.video_url | media_url }}" preload="metadata" muted></video>
+          <video src="/uploads/{{ s.video_url }}" preload="metadata" muted></video>
           <div class="short-overlay"></div>
           <div class="short-play">▶</div>
           <span class="view-badge">👁 {{ s.view_count }}</span>
@@ -101,7 +101,7 @@
             {% endif %}
             <div class="short-meta">
               <div class="short-av" style="background:{{ s.avatar_color }}">
-                {% if s.avatar %}<img src="{{ s.avatar | media_url }}">{% else %}{{ s.full_name[0] if s.full_name else s.username[0] }}{% endif %}
+                {% if s.avatar %}<img src="/uploads/{{ s.avatar }}">{% else %}{{ s.full_name[0] if s.full_name else s.username[0] }}{% endif %}
               </div>
               <span class="short-user">@{{ s.username }}</span>
               <div class="short-stats">
@@ -151,7 +151,7 @@
 <div class="smodal" id="shortModal">
   <div class="smodal-inner">
     <div class="smodal-video-side">
-      <button class="smodal-close" onclick="closeModal()">✕</button>
+      <button class="smodal-close" onclick="closeShortModal()">✕</button>
       <video id="modalVid" controls autoplay loop style="width:100%;height:100%;object-fit:cover;"></video>
     </div>
     <div class="smodal-info-side">
@@ -210,14 +210,14 @@ async function uploadShort(){
   }catch(e){showToast('Bağlantı hatası','error');btn.disabled=false;btn.textContent='▶ Yükle';}
 }
 
-function openModal(idx){
+function openShortModal(idx){
   cur=idx;
   document.getElementById('shortModal').classList.add('open');
   loadShort(idx);
   fetch('/shorts/view/'+SHORTS[idx].id,{method:'POST'});
 }
 
-function closeModal(){
+function closeShortModal(){
   document.getElementById('shortModal').classList.remove('open');
   const v=document.getElementById('modalVid'); v.pause(); v.src='';
 }
@@ -281,7 +281,7 @@ async function sendComment(){
 // Keyboard navigation
 document.addEventListener('keydown',e=>{
   if(document.getElementById('shortModal').classList.contains('open')){
-    if(e.key==='Escape') closeModal();
+    if(e.key==='Escape') closeShortModal();
     if(e.key==='ArrowLeft') prevShort();
     if(e.key==='ArrowRight') nextShort();
   }

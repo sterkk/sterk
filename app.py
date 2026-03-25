@@ -980,6 +980,11 @@ def shorts():
             FROM shorts s JOIN users u ON s.user_id=u.id
             ORDER BY s.created_at DESC LIMIT 50''',(uid,))
         return render_template('shorts.html',shorts=vids or [],user=get_user(uid))
+    except Exception as e:
+        app.logger.error(f"Shorts error: {e}")
+        try: c.rollback()
+        except: pass
+        return render_template('shorts.html',shorts=[],user=get_user(uid))
     finally: release_db(c)
 
 @app.route('/shorts/upload', methods=['POST'])
