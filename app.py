@@ -6,6 +6,9 @@
 pip install flask psycopg2-binary werkzeug bcrypt flask-limiter
 """
 import secrets, hashlib, random, json, os, re, threading, time
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 # .env dosyasını otomatik yükle (varsa)
 try:
     from dotenv import load_dotenv
