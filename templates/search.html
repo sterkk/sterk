@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Arama{% endblock %}
+{% block extra_style %}
+.search-wrap{max-width:720px;margin:0 auto;padding:2rem 1rem;}
+.result-section{margin-bottom:2rem;}
+.section-title{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.8rem;}
+.user-row{display:flex;align-items:center;gap:0.9rem;padding:0.8rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:0.5rem;text-decoration:none;color:var(--text);transition:all 0.2s;}
+.user-row:hover{border-color:rgba(99,102,241,0.3);}
+.tag-row{display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.9rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:20px;color:#a5b4fc;font-size:0.82rem;margin:0.2rem;transition:all 0.15s;}
+.tag-row:hover{background:rgba(99,102,241,0.2);}
+{% endblock %}
+{% block content %}
+<div class="search-wrap">
+    <h1 style="font-size:1.3rem;margin-bottom:1.5rem">🔍 Arama</h1>
+    <form action="/search" method="GET" style="display:flex;gap:0.6rem;margin-bottom:2rem">
+        <input name="q" value="{{ q }}" placeholder="Kullanıcı, içerik veya #etiket..." class="input" style="flex:1">
+        <button type="submit" class="btn btn-primary">Ara</button>
+    </form>
+    {% if q %}
+        {% if tags %}
+        <div class="result-section">
+            <div class="section-title">🏷️ Etiketler</div>
+            {% for tag in tags %}<a href="/explore?tag={{ tag.tag }}" class="tag-row">#{{ tag.tag }} <span style="opacity:0.6">{{ tag.post_count }}</span></a>{% endfor %}
+        </div>
+        {% endif %}
+        {% if users %}
+        <div class="result-section">
+            <div class="section-title">👤 Kullanıcılar ({{ users|length }})</div>
+            {% for u in users %}
+            <a href="/profile/{{ u.username }}" class="user-row">
+                <div class="avatar avatar-sm" style="background:{{ u.avatar_color }}">{{ (u.full_name or u.username)[0].upper() }}</div>
+                <div style="flex:1;min-width:0">
+                    <strong style="font-size:0.88rem;display:block">{{ u.full_name or u.username }}</strong>
+                    <span style="font-size:0.75rem;color:var(--text2)">@{{ u.username }} · {{ u.follower_count }} takipçi</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if posts %}
+        <div class="result-section">
+            <div class="section-title">📝 Gönderiler ({{ posts|length }})</div>
+            {% for post in posts %}
+            <div class="post-card">
+                <div class="post-header">
+                    <a href="/profile/{{ post.username }}"><div class="avatar avatar-sm" style="background:{{ post.avatar_color }}">{{ (post.full_name or post.username)[0].upper() }}</div></a>
+                    <div class="post-user-info">
+                        <strong><a href="/profile/{{ post.username }}" style="color:var(--text)">@{{ post.username }}</a>{% if post.is_verified %}<span class="verified">✓</span>{% endif %}</strong>
+                        <span>{{ time_ago(post.created_at) }}</span>
+                    </div>
+                </div>
+                <div class="post-content">{{ post.content }}</div>
+                <div style="font-size:0.78rem;color:var(--muted)">❤️ {{ post.like_count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if not tags and not users and not posts %}
+        <div style="text-align:center;padding:3rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">🔍</div><p>"{{ q }}" için sonuç bulunamadı.</p></div>
+        {% endif %}
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">🔎</div><p>Bir şeyler aramayı dene.</p></div>
+    {% endif %}
+</div>
+{% endblock %}

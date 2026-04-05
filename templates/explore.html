@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Keşfet{% endblock %}
+{% block extra_style %}
+.explore-wrap{max-width:1100px;margin:0 auto;padding:1.5rem 1rem;}
+.explore-layout{display:grid;grid-template-columns:240px 1fr;gap:1.5rem;}
+@media(max-width:700px){.explore-layout{grid-template-columns:1fr;}.cat-sidebar{display:none;}}
+.cat-sidebar{position:sticky;top:80px;height:fit-content;}
+.cat-sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.2rem;max-height:calc(100vh - 120px);overflow-y:auto;}
+.cat-sidebar-card h4{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.8rem;}
+.cat-item{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.6rem;border-radius:8px;color:var(--text2);font-size:0.82rem;transition:all 0.15s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;}
+.cat-item:hover{background:var(--border);color:var(--text);}
+.cat-item.active{background:rgba(99,102,241,0.1);color:var(--accent);}
+.sub-list{padding:0.2rem 0 0.2rem 1.2rem;}
+.sub-item{display:block;padding:0.25rem 0.6rem;border-radius:6px;color:var(--text2);font-size:0.75rem;transition:all 0.15s;}
+.sub-item:hover{color:var(--accent);}
+.sub-item.active{color:var(--accent2);font-weight:500;}
+.search-tabs{display:flex;gap:0.5rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.search-tab{padding:0.4rem 1rem;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.82rem;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.search-tab.active{background:rgba(99,102,241,0.15);border-color:var(--accent);color:var(--accent);}
+.users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.8rem;}
+.user-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.2rem;text-align:center;transition:all 0.2s;display:block;color:var(--text);}
+.user-card:hover{border-color:rgba(99,102,241,0.3);transform:translateY(-2px);}
+.user-card h3{font-size:0.88rem;margin:0.5rem 0 0.2rem;}
+.user-card .handle{font-size:0.72rem;color:var(--text2);margin-bottom:0.4rem;}
+.trending-tags{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.2rem;}
+.trend-chip{padding:0.35rem 0.9rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:20px;color:#a5b4fc;font-size:0.78rem;transition:all 0.15s;}
+.trend-chip:hover{background:rgba(99,102,241,0.2);}
+.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;}
+{% endblock %}
+{% block content %}
+<div class="explore-wrap">
+    <div class="explore-layout">
+        <div class="cat-sidebar">
+            <div class="cat-sidebar-card">
+                <h4>Kategoriler</h4>
+                <a href="/explore" style="text-decoration:none"><button class="cat-item {% if not selected_cat and not selected_tag %}active{% endif %}">🌐 Tümü</button></a>
+                {% for cat_name, cat_data in professions.items() %}
+                <button class="cat-item {% if selected_cat == cat_name %}active{% endif %}" onclick="location.href='/explore?category={{ cat_name|urlencode }}'">{{ cat_data.icon }} {{ cat_name }}</button>
+                {% if selected_cat == cat_name %}
+                <div class="sub-list">
+                    {% for sub in cat_data.subs %}
+                    <a href="/explore?category={{ cat_name|urlencode }}&sub={{ sub|urlencode }}" class="sub-item {% if selected_sub == sub %}active{% endif %}">{{ sub }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div>
+            {% if selected_tag %}
+            <div class="header-row"><h2 style="font-size:1.1rem">🏷️ #{{ selected_tag }}<span style="font-size:0.8rem;color:var(--muted);font-weight:400;font-family:'DM Sans'">({{ users|length }} kişi)</span></h2><a href="/explore" class="btn btn-ghost btn-sm">← Temizle</a></div>
+            {% elif selected_sub %}
+            <div class="header-row"><h2 style="font-size:1.1rem">{{ selected_sub }}<span style="font-size:0.8rem;color:var(--muted);font-weight:400;font-family:'DM Sans'">({{ users|length }} kişi)</span></h2><a href="/explore?category={{ selected_cat|urlencode }}" class="btn btn-ghost btn-sm">← Geri</a></div>
+            {% elif selected_cat %}
+            <div class="header-row"><h2 style="font-size:1.1rem">{{ selected_cat }}<span style="font-size:0.8rem;color:var(--muted);font-weight:400;font-family:'DM Sans'">({{ users|length }} kişi)</span></h2><a href="/explore" class="btn btn-ghost btn-sm">← Tümü</a></div>
+            {% else %}
+            <div class="header-row"><h2 style="font-size:1.1rem">Keşfet</h2></div>
+            {% endif %}
+            {% if trending and not selected_cat and not selected_tag %}
+            <div class="trending-tags">
+                {% for t in trending %}
+                <a href="/explore?tag={{ t.tag }}" class="trend-chip">#{{ t.tag }} <span style="opacity:0.6">{{ t.post_count }}</span></a>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if posts %}
+            <div style="margin-bottom:1.5rem">
+                <h3 style="font-size:0.85rem;color:var(--text2);margin-bottom:0.8rem">Gönderiler</h3>
+                {% for post in posts %}
+                <div class="post-card" id="post-{{ post.id }}">
+                    <div class="post-header">
+                        <a href="/profile/{{ post.username }}"><div class="avatar avatar-md" style="background:{{ post.avatar_color }}">{{ (post.full_name or post.username)[0].upper() }}</div></a>
+                        <div class="post-user-info">
+                            <strong><a href="/profile/{{ post.username }}" style="color:var(--text)">{{ post.full_name or post.username }}</a>{% if post.is_verified %}<span class="verified">✓</span>{% endif %}</strong>
+                            <span>@{{ post.username }} · {{ time_ago(post.created_at) }}</span>
+                        </div>
+                    </div>
+                    <div class="post-content">{{ post.content }}</div>
+                    <div class="post-actions">
+                        <button class="action-btn {% if post.liked %}liked{% endif %}" onclick="likePost({{ post.id }}, this)">
+                            <span class="btn-emoji">{% if post.liked %}❤️{% else %}🤍{% endif %}</span>
+                            <span class="btn-count">{{ post.like_count }}</span>
+                        </button>
+                        <button class="action-btn" onclick="toggleComments({{ post.id }})">💬 <span class="comment-count">{{ post.comment_count }}</span></button>
+                    </div>
+                    <div class="comments-area" id="comments-{{ post.id }}"><div class="comment-list"></div><div style="display:flex;gap:0.5rem;margin-top:0.7rem"><input class="comment-input" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.83rem;padding:0.5rem 0.7rem;outline:none" placeholder="Yorum..." onkeydown="if(event.key==='Enter')submitComment({{ post.id }})"><button class="btn btn-primary btn-sm" onclick="submitComment({{ post.id }})">↑</button></div></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if users %}
+            <h3 style="font-size:0.85rem;color:var(--text2);margin-bottom:0.8rem">Kullanıcılar ({{ users|length }})</h3>
+            <div class="users-grid">
+                {% for u in users %}
+                <a href="/profile/{{ u.username }}" class="user-card">
+                    <div class="avatar avatar-lg" style="background:{{ u.avatar_color }};margin:0 auto 0.5rem">{{ (u.full_name or u.username)[0].upper() }}</div>
+                    <h3>{{ u.full_name or u.username }}</h3>
+                    <div class="handle">@{{ u.username }}</div>
+                    <div style="font-size:0.72rem;color:var(--muted)">{{ u.follower_count }} takipçi</div>
+                    {% if u.id != current_user.id %}
+                    <button class="btn btn-primary btn-sm" style="margin-top:0.6rem;width:100%" onclick="event.preventDefault();toggleFollow({{ u.id }}, this)">+ Takip Et</button>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% elif not posts %}
+            <div style="text-align:center;padding:4rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">🔍</div><p>Bu kategoride henüz kullanıcı yok.</p></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

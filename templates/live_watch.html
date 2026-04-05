@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}{{ stream.title or 'Canlı Yayın' }}{% endblock %}
+{% block content %}
+<style>
+.watch-wrap{max-width:1200px;margin:0 auto;padding:1rem;display:flex;gap:1rem;}
+.watch-main{flex:1;min-width:0;}
+.watch-chat{width:320px;flex-shrink:0;display:flex;flex-direction:column;}
+
+/* Video area */
+.video-box{background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9;position:relative;display:flex;align-items:center;justify-content:center;}
+.video-placeholder{text-align:center;color:rgba(255,255,255,0.4);}
+.video-placeholder .vp-av{width:80px;height:80px;border-radius:50%;border:4px solid rgba(239,68,68,0.4);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:white;margin:0 auto 1rem;overflow:hidden;animation:glow 2s ease-in-out infinite;}
+.video-placeholder .vp-av img{width:100%;height:100%;object-fit:cover;}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3);}50%{box-shadow:0 0 20px 8px rgba(239,68,68,0.15);}}
+.live-indicator{position:absolute;top:14px;left:14px;background:linear-gradient(135deg,#ef4444,#f97316);color:white;font-size:0.68rem;font-weight:800;padding:0.25rem 0.65rem;border-radius:20px;display:flex;align-items:center;gap:0.3rem;font-family:'Syne',sans-serif;}
+.live-indicator::before{content:'';width:6px;height:6px;background:white;border-radius:50%;animation:livepulse 1s infinite;}
+@keyframes livepulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.viewer-badge{position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);color:rgba(255,255,255,0.9);font-size:0.72rem;padding:0.25rem 0.65rem;border-radius:20px;}
+
+/* Stream info bar */
+.stream-info-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.9rem 1.1rem;margin-top:0.8rem;display:flex;align-items:center;gap:0.9rem;flex-wrap:wrap;}
+.si-avatar{width:42px;height:42px;border-radius:50%;border:2px solid rgba(239,68,68,0.4);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;color:white;overflow:hidden;flex-shrink:0;}
+.si-avatar img{width:100%;height:100%;object-fit:cover;}
+.si-text h3{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--text);}
+.si-text p{font-size:0.78rem;color:var(--text2);}
+.si-actions{margin-left:auto;display:flex;gap:0.5rem;}
+.si-btn{padding:0.4rem 0.9rem;border-radius:10px;border:1px solid var(--border);background:none;color:var(--text2);font-size:0.8rem;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.si-btn:hover{border-color:var(--accent);color:var(--accent);}
+.si-btn.danger{border-color:rgba(239,68,68,0.4);color:#ef4444;}
+.si-btn.danger:hover{background:rgba(239,68,68,0.1);}
+
+/* Chat panel */
+.chat-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;height:calc(100vh - 100px);min-height:500px;}
+.chat-header{padding:0.9rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.chat-header h4{font-family:'Syne',sans-serif;font-weight:800;font-size:0.9rem;color:var(--text);}
+.chat-msgs{flex:1;overflow-y:auto;padding:0.8rem;display:flex;flex-direction:column;gap:0.5rem;}
+.chat-msgs::-webkit-scrollbar{width:4px;}
+.chat-msgs::-webkit-scrollbar-track{background:transparent;}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.chat-msg{display:flex;gap:0.5rem;align-items:flex-start;}
+.chat-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:white;overflow:hidden;}
+.chat-av img{width:100%;height:100%;object-fit:cover;}
+.chat-bubble{background:var(--surface);border-radius:0 10px 10px 10px;padding:0.45rem 0.7rem;max-width:90%;}
+.chat-bubble strong{font-size:0.72rem;color:var(--accent2);}
+.chat-bubble p{font-size:0.8rem;color:var(--text);line-height:1.4;margin-top:0.1rem;}
+.chat-bubble .chat-time{font-size:0.65rem;color:var(--muted);margin-top:0.2rem;}
+.chat-input-row{padding:0.7rem 0.9rem;border-top:1px solid var(--border);display:flex;gap:0.5rem;}
+.chat-input-row input{flex:1;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;}
+.chat-input-row input:focus{border-color:var(--accent);}
+.chat-input-row button{padding:0.5rem 0.9rem;background:var(--grad);color:white;border:none;border-radius:10px;cursor:pointer;font-size:0.82rem;font-weight:700;font-family:'Syne',sans-serif;}
+.chat-input-row button:hover{opacity:0.85;}
+.offline-banner{background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.2);border-radius:10px;padding:0.7rem 1rem;text-align:center;font-size:0.82rem;color:var(--text2);margin:0.8rem 0;}
+
+/* Owner controls */
+.owner-bar{background:linear-gradient(135deg,rgba(239,68,68,0.07),rgba(249,115,22,0.07));border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:0.9rem 1.1rem;margin-top:0.8rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;}
+.owner-bar p{font-size:0.82rem;color:var(--text2);}
+.end-btn{padding:0.5rem 1.2rem;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:0.85rem;cursor:pointer;transition:opacity 0.2s;}
+.end-btn:hover{opacity:0.85;}
+
+.system-msg{text-align:center;font-size:0.72rem;color:var(--muted);padding:0.2rem 0;}
+
+@media(max-width:768px){.watch-wrap{flex-direction:column;}.watch-chat{width:100%;}.chat-panel{height:400px;}}
+</style>
+
+<div class="watch-wrap">
+  <div class="watch-main">
+    <!-- Video -->
+    <div class="video-box" id="videoBox">
+      <div class="video-placeholder" id="vidPlaceholder">
+        <div class="vp-av" style="background:{{ stream.avatar_color }}">
+          {% if stream.avatar %}<img src="{{ media_url(stream.avatar) }}">{% else %}{{ (stream.full_name or stream.username)[0]|upper }}{% endif %}
+        </div>
+        {% if stream.is_live %}
+        <p style="font-size:1rem;font-weight:700;color:rgba(255,255,255,0.8);margin-bottom:0.3rem;">{{ stream.title or 'Canlı Yayın' }}</p>
+        <p style="font-size:0.82rem;">@{{ stream.username }} yayında</p>
+        <p style="font-size:0.75rem;margin-top:0.5rem;color:rgba(255,255,255,0.4);">Yayın bu platformda gerçek zamanlı video içermemektedir.<br>Bağlantı linkleri sohbet üzerinden paylaşılabilir.</p>
+        {% else %}
+        <p style="font-size:1rem;font-weight:700;color:rgba(255,255,255,0.5);">Yayın Sona Erdi</p>
+        <p style="font-size:0.82rem;">Bu yayın artık aktif değil.</p>
+        {% endif %}
+      </div>
+      {% if stream.is_live %}
+      <div class="live-indicator">CANLI</div>
+      <div class="viewer-badge" id="viewerBadge">👁 {{ stream.viewer_count }} izleyici</div>
+      {% endif %}
+    </div>
+
+    <!-- Stream info -->
+    <div class="stream-info-bar">
+      <div class="si-avatar" style="background:{{ stream.avatar_color }}">
+        {% if stream.avatar %}<img src="{{ media_url(stream.avatar) }}">{% else %}{{ (stream.full_name or stream.username)[0]|upper }}{% endif %}
+      </div>
+      <div class="si-text">
+        <h3>{{ stream.title or 'Canlı Yayın' }}</h3>
+        <p>@{{ stream.username }} · {% if stream.is_live %}🔴 Şu an canlı{% else %}⚫ Yayın bitti{% endif %}</p>
+      </div>
+      <div class="si-actions">
+        <button class="si-btn" id="followBtn" onclick="toggleFollow({{ stream.user_id }},this)">+ Takip Et</button>
+        {% if not stream.is_live %}
+        <a href="/live" class="si-btn">← Yayınlara Dön</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if stream.description %}
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.9rem 1.1rem;margin-top:0.7rem;">
+      <p style="font-size:0.83rem;color:var(--text2);line-height:1.6;">{{ stream.description }}</p>
+    </div>
+    {% endif %}
+
+    {% if current_user_obj and current_user_obj.id == stream.user_id and stream.is_live %}
+    <div class="owner-bar">
+      <p>🎙 Siz yayın yapıyorsunuz. Bitirmek için aşağıdaki butonu kullanın.</p>
+      <button class="end-btn" onclick="endLive()">⏹ Yayını Sonlandır</button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Chat -->
+  <div class="watch-chat">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <h4>💬 Sohbet</h4>
+        <span style="font-size:0.72rem;color:var(--text2);" id="onlineCount">{{ stream.viewer_count }} izleyici</span>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="system-msg">Yayın sohbeti başladı 👋</div>
+        {% for msg in chat %}
+        <div class="chat-msg">
+          <div class="chat-av" style="background:{{ msg.avatar_color }}">
+            {% if msg.avatar %}<img src="{{ media_url(msg.avatar) }}">{% else %}{{ msg.username[0]|upper }}{% endif %}
+          </div>
+          <div class="chat-bubble">
+            <strong>@{{ msg.username }}</strong>
+            <p>{{ msg.message }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if stream.is_live %}
+      <div class="chat-input-row">
+        <input id="chatInput" placeholder="Mesaj yaz..." maxlength="200"
+          onkeydown="if(event.key==='Enter')sendChat()">
+        <button onclick="sendChat()">→</button>
+      </div>
+      {% else %}
+      <div style="padding:0.8rem;text-align:center;font-size:0.8rem;color:var(--muted);">Yayın sona erdi</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+const STREAM_ID = {{ stream.id }};
+const IS_LIVE = {{ 'true' if stream.is_live else 'false' }};
+let pollTimer = null;
+
+function scrollChat(){
+  const el=document.getElementById('chatMsgs');
+  el.scrollTop=el.scrollHeight;
+}
+scrollChat();
+
+function appendMsg(username,message,color,avatar){
+  const el=document.getElementById('chatMsgs');
+  const div=document.createElement('div');
+  div.className='chat-msg';
+  const avHtml=avatar?
+    `<img src="${_mu(avatar)}" style="width:100%;height:100%;object-fit:cover;">`:
+    username[0].toUpperCase();
+  div.innerHTML=`
+    <div class="chat-av" style="background:${color}">${avHtml}</div>
+    <div class="chat-bubble">
+      <strong>@${username}</strong>
+      <p>${message}</p>
+    </div>`;
+  el.appendChild(div);
+  scrollChat();
+}
+
+async function sendChat(){
+  const inp=document.getElementById('chatInput');
+  const msg=inp.value.trim(); if(!msg) return;
+  inp.value='';
+  try{
+    const r=await fetch('/live/'+STREAM_ID+'/chat',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg})});
+    const d=await r.json();
+    if(d.success){
+      // Optimistic — mesajı hemen göster
+      appendMsg(d.username,msg,d.avatar_color,d.avatar);
+    }
+  }catch(e){}
+}
+
+async function pollChat(){
+  try{
+    const r=await fetch('/api/live/'+STREAM_ID+'/messages');
+    const d=await r.json();
+    if(d.messages){
+      // Sadece yeni mesajları ekle
+      const cur=document.querySelectorAll('.chat-msg').length;
+      if(d.messages.length>cur){
+        const newMsgs=d.messages.slice(cur);
+        newMsgs.forEach(m=>appendMsg(m.username,m.message,m.avatar_color,m.avatar));
+      }
+    }
+    if(d.viewer_count!==undefined){
+      document.getElementById('onlineCount').textContent=d.viewer_count+' izleyici';
+      const vb=document.getElementById('viewerBadge');
+      if(vb) vb.textContent='👁 '+d.viewer_count+' izleyici';
+    }
+  }catch(e){}
+}
+
+async function toggleFollow(uid,btn){
+  try{
+    const r=await fetch('/follow/'+uid,{method:'POST'});
+    const d=await r.json();
+    if(d.following){btn.textContent='✓ Takipte';btn.style.borderColor='var(--success)';btn.style.color='var(--success)';}
+    else{btn.textContent='+ Takip Et';btn.style.borderColor='';btn.style.color='';}
+  }catch(e){}
+}
+
+async function endLive(){
+  if(!confirm('Yayını sonlandırmak istediğinize emin misiniz?')) return;
+  try{
+    await fetch('/live/end',{method:'POST'});
+    showToast('Yayın sonlandırıldı','success');
+    setTimeout(()=>location.href='/live',1000);
+  }catch(e){}
+}
+
+if(IS_LIVE){
+  pollTimer=setInterval(pollChat,3000);
+}
+
+window.addEventListener('beforeunload',()=>{
+  if(pollTimer) clearInterval(pollTimer);
+});
+</script>
+{% endblock %}

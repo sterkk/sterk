@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Profil Kurulumu — Sterk</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#04040d;color:#e2e8f0;font-family:'DM Sans',sans-serif;min-height:100vh;}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.1;pointer-events:none;}
+.orb1{width:500px;height:500px;background:#6366f1;top:-150px;right:-150px;}
+.orb2{width:400px;height:400px;background:#ec4899;bottom:-100px;left:-100px;}
+.page{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:2rem 1rem 4rem;}
+/* STEPS */
+.steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:2.5rem;}
+.step{display:flex;align-items:center;gap:0.5rem;}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;transition:all 0.3s;flex-shrink:0;}
+.step-dot.done{background:#10b981;color:white;}
+.step-dot.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;box-shadow:0 0 20px rgba(99,102,241,0.5);}
+.step-dot.pending{background:rgba(255,255,255,0.06);color:#4a5568;border:1px solid rgba(255,255,255,0.08);}
+.step-label{font-size:0.72rem;color:#64748b;white-space:nowrap;}
+.step-label.active{color:#a5b4fc;font-weight:600;}
+.step-line{width:40px;height:2px;background:rgba(255,255,255,0.06);margin:0 0.4rem;flex-shrink:0;}
+.step-line.done{background:linear-gradient(90deg,#10b981,#6366f1);}
+/* HEADER */
+.page-hdr{text-align:center;margin-bottom:2rem;}
+.page-hdr h1{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:0.4rem;}
+.page-hdr p{color:#64748b;font-size:0.85rem;max-width:480px;margin:0 auto;}
+/* SECTION */
+.section{background:rgba(10,10,24,0.8);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:1.6rem;margin-bottom:1rem;backdrop-filter:blur(10px);}
+.section h3{font-family:'Syne',sans-serif;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:1.2rem;display:flex;align-items:center;gap:0.4rem;}
+.section h3 span{font-size:1.1em;}
+/* CRITICAL WARNING */
+.critical-box{background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:1rem;margin-bottom:1.2rem;}
+.critical-box .ct{font-size:0.8rem;font-weight:700;color:#ef4444;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem;}
+.critical-box p{font-size:0.75rem;color:#94a3b8;line-height:1.6;}
+.critical-box strong{color:#fca5a5;}
+/* PROFESSIONS */
+.prof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.6rem;}
+.prof-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:0.7rem 0.85rem;cursor:pointer;transition:all 0.2s;}
+.prof-card:hover{border-color:rgba(99,102,241,0.4);}
+.prof-card.expanded{border-color:rgba(99,102,241,0.5);background:rgba(99,102,241,0.05);}
+.prof-card-head{display:flex;align-items:center;gap:0.5rem;}
+.prof-icon{font-size:1.2rem;}
+.prof-name{font-size:0.83rem;font-weight:600;flex:1;}
+.prof-arr{font-size:0.7rem;color:#64748b;transition:transform 0.2s;}
+.prof-card.expanded .prof-arr{transform:rotate(90deg);}
+.prof-subs{display:none;flex-wrap:wrap;gap:0.3rem;margin-top:0.6rem;padding-top:0.6rem;border-top:1px solid rgba(255,255,255,0.05);}
+.prof-card.expanded .prof-subs{display:flex;}
+.sub-btn{padding:0.22rem 0.6rem;border-radius:20px;border:1px solid rgba(255,255,255,0.08);font-size:0.72rem;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.03);color:#94a3b8;}
+.sub-btn:hover{border-color:rgba(99,102,241,0.4);color:#a5b4fc;}
+.sub-btn.sel{background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.5);color:#a5b4fc;}
+/* SELECTED TAGS */
+.selected-area{min-height:40px;display:flex;flex-wrap:wrap;gap:0.4rem;padding:0.6rem;background:rgba(255,255,255,0.02);border:1px dashed rgba(99,102,241,0.2);border-radius:10px;margin-top:0.8rem;}
+.sel-tag{display:flex;align-items:center;gap:0.3rem;padding:0.25rem 0.65rem;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);border-radius:20px;font-size:0.73rem;color:#a5b4fc;}
+.sel-tag button{background:none;border:none;color:#6366f1;cursor:pointer;font-size:0.8rem;padding:0;line-height:1;}
+.sel-tag button:hover{color:#ef4444;}
+/* COUNTRY / CITY */
+.country-select-area{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.5rem;max-height:260px;overflow-y:auto;padding:0.3rem;}
+.country-btn{padding:0.42rem 0.7rem;border-radius:9px;border:1px solid rgba(255,255,255,0.07);font-size:0.77rem;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.03);color:#94a3b8;text-align:left;}
+.country-btn:hover{border-color:rgba(99,102,241,0.3);}
+.country-btn.sel{background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.4);color:#a5b4fc;}
+.city-area{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.6rem;}
+.city-btn{padding:0.2rem 0.55rem;border-radius:20px;border:1px solid rgba(255,255,255,0.07);font-size:0.72rem;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.02);color:#94a3b8;}
+.city-btn:hover{border-color:rgba(99,102,241,0.3);}
+.city-btn.sel{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.4);color:#6ee7b7;}
+/* MAX NOTE */
+.max-note{font-size:0.72rem;color:#64748b;margin-top:0.4rem;}
+/* FORM */
+.field{margin-bottom:0.8rem;}
+.field label{display:block;font-size:0.74rem;color:#94a3b8;margin-bottom:0.3rem;}
+.input{width:100%;padding:0.58rem 0.82rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;color:#e2e8f0;font-family:'DM Sans',sans-serif;font-size:0.87rem;outline:none;transition:border-color 0.2s;}
+.input:focus{border-color:#6366f1;}
+.input::placeholder{color:#374151;}
+/* SUBMIT */
+.submit-wrap{display:flex;justify-content:flex-end;margin-top:1.5rem;}
+.btn-main{padding:0.72rem 2rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:11px;color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:0.93rem;cursor:pointer;transition:all 0.2s;box-shadow:0 6px 20px rgba(99,102,241,0.35);}
+.btn-main:hover:not(:disabled){opacity:0.88;transform:translateY(-1px);}
+.btn-main:disabled{opacity:0.4;cursor:not-allowed;}
+.err{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:9px;padding:0.6rem 0.85rem;font-size:0.78rem;color:#fca5a5;margin-top:0.8rem;display:none;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="page">
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step"><div class="step-dot done">✓</div><span class="step-label">Hesap</span></div>
+    <div class="step-line done"></div>
+    <div class="step"><div class="step-dot active">2</div><span class="step-label active">Profil Kurulumu</span></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-dot pending">3</div><span class="step-label">Keşfet</span></div>
+  </div>
+
+  <div class="page-hdr">
+    <h1>🐝 Profilini Kur</h1>
+    <p>Sterk'da doğru kişilerle bağlanmak için bilgilerini eksiksiz doldur. Bu bilgiler herkes tarafından görülebilir.</p>
+  </div>
+
+  <!-- KATEGORİ UYARISI -->
+  <div class="critical-box">
+    <div class="ct">🔴 Kategori seçimi — çok önemli!</div>
+    <p>Seçtiğin <strong>meslek / alan kategorisi</strong> profil kimliğinin temelini oluşturur. Bu kategoriye ait kullanıcılarla eşleştirileceksin ve <strong>yalnızca seçtiğin kategorilerde paylaşım yapabileceksin</strong>.<br><br>
+    Seçim yaptıktan sonra <strong>{{ change_days }} gün</strong> boyunca değiştiremezsin. <strong>Gerçek mesleğini veya alanını seç.</strong></p>
+  </div>
+
+  <!-- MESLEK / ALAN SEÇİMİ -->
+  <div class="section">
+    <h3><span>💼</span> Meslek / Alan Seçimi <span style="color:#ef4444">*</span></h3>
+    <p style="font-size:0.78rem;color:#64748b;margin-bottom:0.9rem">En az 1, en fazla 3 meslek/alan seç. Kategoriye tıkla → alt dalı seç.</p>
+    <div class="prof-grid" id="profGrid"></div>
+    <div class="selected-area" id="selectedProf">
+      <span style="color:#4a5568;font-size:0.78rem;align-self:center">Henüz seçim yapılmadı — yukarıdan seç</span>
+    </div>
+    <div class="max-note" id="profMaxNote"></div>
+  </div>
+
+  <!-- ÜLKE / ŞEHİR -->
+  <div class="section">
+    <h3><span>🌍</span> Ülke & Şehir Seçimi</h3>
+    <p style="font-size:0.78rem;color:#64748b;margin-bottom:0.9rem">Hangi ülke/şehirden bağlantı kurmak istiyorsun? En fazla <strong style="color:#a5b4fc">5 ülke</strong> seçebilirsin.</p>
+    <div class="country-select-area" id="countryArea"></div>
+    <div id="citySection" style="display:none">
+      <div style="font-size:0.75rem;font-weight:600;color:#94a3b8;margin-top:0.9rem;margin-bottom:0.4rem">🏙️ Seçilen ülkelerin şehirleri:</div>
+      <div class="city-area" id="cityArea"></div>
+    </div>
+    <div class="selected-area" id="selectedLoc" style="margin-top:0.8rem">
+      <span style="color:#4a5568;font-size:0.78rem;align-self:center">Ülke/şehir seçilmedi</span>
+    </div>
+  </div>
+
+  <!-- BİYOGRAFİ & KONUM -->
+  <div class="section">
+    <h3><span>✍️</span> Hakkında</h3>
+    <div class="field"><label>Biyografi <span style="color:#64748b;font-size:0.68rem">(opsiyonel, max 280 karakter)</span></label>
+      <textarea id="bio" class="input" rows="2" maxlength="280" placeholder="Kendin, işin veya ilgi alanların hakkında kısa bir şeyler yaz..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem">
+      <div class="field"><label>Konum</label><input id="location" class="input" placeholder="İstanbul, Türkiye"></div>
+      <div class="field"><label>Website</label><input id="website" class="input" placeholder="https://..."></div>
+    </div>
+  </div>
+
+  <div id="errBox" class="err"></div>
+  <div class="submit-wrap">
+    <button class="btn-main" id="finishBtn" onclick="finish()">Tamamla ve Devam Et →</button>
+  </div>
+</div>
+
+<script>
+const PROFESSIONS = {{ professions|tojson }};
+const COUNTRY_CITIES = {{ country_cities|tojson }};
+const MAX_PROF = 3;
+const MAX_COUNTRIES = 5;
+
+let selectedProf = [];   // [{category, subcategory}]
+let selectedCountries = [];
+let selectedCities = [];  // [{country, city}]
+
+// ── PROFESSIONS ──
+function buildProfGrid(){
+  const grid = document.getElementById('profGrid');
+  grid.innerHTML = '';
+  for(const [cat, data] of Object.entries(PROFESSIONS)){
+    const card = document.createElement('div');
+    card.className = 'prof-card';
+    card.innerHTML = `<div class="prof-card-head" onclick="toggleProfCard(this.parentElement,'${escJ(cat)}')">
+      <span class="prof-icon">${data.icon}</span>
+      <span class="prof-name">${cat}</span>
+      <span class="prof-arr">›</span>
+    </div>
+    <div class="prof-subs">${data.subs.map(s=>`<div class="sub-btn" data-cat="${escJ(cat)}" data-sub="${escJ(s)}" onclick="toggleSub(this,'${escJ(cat)}','${escJ(s)}')">${s}</div>`).join('')}</div>`;
+    grid.appendChild(card);
+  }
+}
+
+function toggleProfCard(card, cat){
+  document.querySelectorAll('.prof-card').forEach(c=>{ if(c!==card)c.classList.remove('expanded'); });
+  card.classList.toggle('expanded');
+}
+
+function toggleSub(btn, cat, sub){
+  const existing = selectedProf.findIndex(t=>t.category===cat && t.subcategory===sub);
+  if(existing >= 0){
+    selectedProf.splice(existing,1);
+    btn.classList.remove('sel');
+  } else {
+    if(selectedProf.length >= MAX_PROF){ showErr(`En fazla ${MAX_PROF} meslek/alan seçebilirsin`); return; }
+    selectedProf.push({category:cat, subcategory:sub, type:'profession'});
+    btn.classList.add('sel');
+  }
+  renderSelectedProf();
+}
+
+function renderSelectedProf(){
+  const area = document.getElementById('selectedProf');
+  if(!selectedProf.length){
+    area.innerHTML = '<span style="color:#4a5568;font-size:0.78rem;align-self:center">Henüz seçim yapılmadı — yukarıdan seç</span>';
+    return;
+  }
+  area.innerHTML = selectedProf.map((t,i)=>`
+    <div class="sel-tag">
+      <span>${PROFESSIONS[t.category]?.icon||''} ${t.subcategory}</span>
+      <button onclick="removeProfTag(${i})">✕</button>
+    </div>`).join('');
+  document.getElementById('profMaxNote').textContent = `${selectedProf.length}/${MAX_PROF} seçildi`;
+}
+
+function removeProfTag(i){
+  const t = selectedProf[i];
+  selectedProf.splice(i,1);
+  document.querySelector(`.sub-btn[data-cat="${escJ(t.category)}"][data-sub="${escJ(t.subcategory)}"]`)?.classList.remove('sel');
+  renderSelectedProf();
+}
+
+// ── COUNTRIES ──
+function buildCountryGrid(){
+  const area = document.getElementById('countryArea');
+  area.innerHTML = '';
+  for(const country of Object.keys(COUNTRY_CITIES)){
+    const btn = document.createElement('div');
+    btn.className = 'country-btn';
+    btn.textContent = country;
+    btn.dataset.country = country;
+    btn.onclick = ()=>toggleCountry(btn, country);
+    area.appendChild(btn);
+  }
+}
+
+function toggleCountry(btn, country){
+  const idx = selectedCountries.indexOf(country);
+  if(idx >= 0){
+    selectedCountries.splice(idx,1);
+    btn.classList.remove('sel');
+    selectedCities = selectedCities.filter(c=>c.country!==country);
+  } else {
+    if(selectedCountries.length >= MAX_COUNTRIES){ showErr(`En fazla ${MAX_COUNTRIES} ülke seçebilirsin`); return; }
+    selectedCountries.push(country);
+    btn.classList.add('sel');
+  }
+  renderCities();
+  renderSelectedLoc();
+}
+
+function renderCities(){
+  const sec = document.getElementById('citySection');
+  const area = document.getElementById('cityArea');
+  if(!selectedCountries.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  area.innerHTML = '';
+  for(const country of selectedCountries){
+    const cities = COUNTRY_CITIES[country]||[];
+    cities.forEach(city=>{
+      const btn = document.createElement('div');
+      btn.className = 'city-btn';
+      const isSel = selectedCities.some(c=>c.country===country&&c.city===city);
+      if(isSel) btn.classList.add('sel');
+      btn.textContent = city;
+      btn.onclick = ()=>toggleCity(btn,country,city);
+      area.appendChild(btn);
+    });
+  }
+}
+
+function toggleCity(btn, country, city){
+  const idx = selectedCities.findIndex(c=>c.country===country&&c.city===city);
+  if(idx>=0){ selectedCities.splice(idx,1); btn.classList.remove('sel'); }
+  else { selectedCities.push({country,city}); btn.classList.add('sel'); }
+  renderSelectedLoc();
+}
+
+function renderSelectedLoc(){
+  const area = document.getElementById('selectedLoc');
+  const all = [...selectedCountries.map(c=>({type:'country',label:c})),
+                ...selectedCities.map(c=>({type:'city',label:`${c.city} (${c.country})`}))];
+  if(!all.length){ area.innerHTML='<span style="color:#4a5568;font-size:0.78rem;align-self:center">Ülke/şehir seçilmedi</span>'; return; }
+  area.innerHTML = all.map(i=>`<div class="sel-tag" style="${i.type==='city'?'background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3)':''}"><span>${i.type==='city'?'🏙️':'🌍'} ${i.label}</span></div>`).join('');
+}
+
+function escJ(s){ return s.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function showErr(m){ const e=document.getElementById('errBox');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',4000); }
+
+async function finish(){
+  if(!selectedProf.length){ showErr('En az bir meslek/alan kategorisi seçmelisin!'); return; }
+  const btn = document.getElementById('finishBtn');
+  btn.disabled=true; btn.textContent='Kaydediliyor...';
+
+  const tags = [
+    ...selectedProf.map(t=>({...t,type:'profession',country:'',city:''})),
+    ...selectedCountries.map(c=>({type:'country',category:'Ülkeler',subcategory:c,country:c,city:''})),
+    ...selectedCities.map(c=>({type:'city',category:'Ülkeler',subcategory:c.city,country:c.country,city:c.city}))
+  ];
+
+  const r = await fetch('/setup',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      bio:document.getElementById('bio').value,
+      location:document.getElementById('location').value,
+      website:document.getElementById('website').value,
+      tags
+    })});
+  const d = await r.json();
+  if(d.success) location.href = d.redirect;
+  else { showErr(d.error); btn.disabled=false; btn.textContent='Tamamla ve Devam Et →'; }
+}
+
+buildProfGrid();
+buildCountryGrid();
+</script>
+</body>
+</html>

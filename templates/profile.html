@@ -1,0 +1,501 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.full_name or profile_user.username }} — Sterk{% endblock %}
+{% block extra_style %}
+.profile-wrap{max-width:960px;margin:0 auto;padding:0 1rem 3rem;}
+/* COVER */
+.cover-area{position:relative;height:240px;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:0 0 24px 24px;overflow:hidden;cursor:pointer;}
+.cover-area img{width:100%;height:100%;object-fit:cover;}
+.cover-placeholder{width:100%;height:100%;background:linear-gradient(135deg,{{ profile_user.avatar_color }},#1a1a2e);}
+.cover-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.0);transition:background 0.2s;display:flex;align-items:center;justify-content:center;opacity:0;}
+.cover-area:hover .cover-overlay{background:rgba(0,0,0,0.4);opacity:1;}
+.cover-edit-btn{background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);color:white;padding:0.5rem 1.1rem;border-radius:10px;font-size:0.82rem;cursor:pointer;}
+/* PROFILE HEADER */
+.profile-header{padding:0 1.5rem;margin-top:-2rem;display:flex;gap:1.2rem;align-items:flex-end;flex-wrap:wrap;position:relative;z-index:5;}
+.avatar-wrap{position:relative;flex-shrink:0;}
+.avatar-xl{width:96px;height:96px;border-radius:24px;border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:2rem;color:white;overflow:hidden;}
+.avatar-xl img{width:100%;height:100%;object-fit:cover;}
+.avatar-edit{position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;cursor:pointer;border:2px solid var(--bg);}
+.profile-info{flex:1;min-width:200px;padding-bottom:0.4rem;}
+.profile-name{font-size:1.3rem;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;}
+.profile-username{color:var(--text2);font-size:0.85rem;margin-top:0.1rem;}
+.profile-bio{color:var(--text2);font-size:0.85rem;margin-top:0.4rem;line-height:1.5;max-width:500px;}
+.profile-actions{display:flex;gap:0.5rem;padding-bottom:0.4rem;flex-wrap:wrap;}
+/* STATS BAR */
+.stats-bar{display:flex;gap:1.5rem;padding:1rem 1.5rem;flex-wrap:wrap;}
+.pstat{text-align:center;cursor:pointer;}
+.pstat strong{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;display:block;}
+.pstat span{font-size:0.72rem;color:var(--text2);}
+/* LAYOUT */
+.p-layout{display:grid;grid-template-columns:300px 1fr;gap:1.2rem;margin-top:1.2rem;}
+@media(max-width:750px){.p-layout{grid-template-columns:1fr;}}
+/* SIDEBAR */
+.p-sidebar-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem;}
+.p-sidebar-box h4{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.9rem;}
+/* BADGES */
+.badges-grid{display:flex;flex-wrap:wrap;gap:0.4rem;}
+.badge-item{display:flex;align-items:center;gap:0.3rem;padding:0.25rem 0.55rem;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.15);border-radius:20px;font-size:0.72rem;color:#a5b4fc;cursor:help;}
+/* TAGS */
+.tag-list{display:flex;flex-wrap:wrap;gap:0.35rem;}
+/* TABS */
+.profile-tabs{display:flex;gap:0.2rem;border-bottom:1px solid var(--border);margin-bottom:1rem;}
+.ptab{padding:0.6rem 1rem;font-size:0.82rem;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;text-decoration:none;display:flex;align-items:center;gap:0.3rem;}
+.ptab.active,.ptab:hover{color:var(--accent);border-bottom-color:var(--accent);}
+/* SCORE RING */
+.score-ring{position:relative;width:64px;height:64px;margin:0 auto 0.7rem;}
+.score-ring svg{transform:rotate(-90deg);}
+.score-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--accent);}
+/* CV SECTION */
+.cv-item{display:flex;gap:0.7rem;padding:0.7rem 0;border-bottom:1px solid var(--border);}
+.cv-item:last-child{border:none;}
+.cv-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0;}
+.cv-body strong{font-size:0.85rem;display:block;}
+.cv-body span{font-size:0.75rem;color:var(--text2);}
+/* ONLINE INDICATOR */
+.online-status{display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--text2);}
+.online-status .dot{width:7px;height:7px;border-radius:50%;}
+.dot-online{background:#10b981;}
+.dot-offline{background:var(--muted);}
+/* MEDIA GRID */
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
+.media-thumb{aspect-ratio:1;overflow:hidden;border-radius:4px;cursor:pointer;}
+.media-thumb img{width:100%;height:100%;object-fit:cover;transition:transform 0.2s;}
+.media-thumb:hover img{transform:scale(1.05);}
+/* XP PROGRESS */
+.xp-progress-area{background:rgba(99,102,241,0.05);border:1px solid rgba(99,102,241,0.15);border-radius:12px;padding:0.8rem;margin-top:0.6rem;}
+{% endblock %}
+{% block content %}
+<div class="profile-wrap">
+  <!-- COVER -->
+  <div class="cover-area" {% if current_user.id == profile_user.id %}onclick="document.getElementById('coverInput').click()"{% endif %}>
+    {% if profile_user.cover_photo %}
+    <img src="{{ media_url(profile_user.cover_photo) }}" alt="Kapak">
+    {% else %}
+    <div class="cover-placeholder"></div>
+    {% endif %}
+    {% if current_user.id == profile_user.id %}
+    <div class="cover-overlay"><button class="cover-edit-btn">📷 Kapak Değiştir</button></div>
+    <input type="file" id="coverInput" accept="image/*" style="display:none" onchange="uploadCover(this)">
+    {% endif %}
+  </div>
+
+  <!-- HEADER -->
+  <div class="profile-header">
+    <div class="avatar-wrap">
+      <div class="avatar-xl" style="background:{{ profile_user.avatar_color }}">
+        {% if profile_user.avatar %}<img src="{{ media_url(profile_user.avatar) }}" alt="">
+        {% else %}{{ (profile_user.full_name or profile_user.username)[0].upper() }}{% endif %}
+      </div>
+      {% if current_user.id == profile_user.id %}
+      <div class="avatar-edit" onclick="document.getElementById('avatarInput').click()" title="Fotoğraf değiştir">📷</div>
+      <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+      {% endif %}
+    </div>
+    <div class="profile-info">
+      <div class="profile-name">
+        <strong>{{ profile_user.full_name or profile_user.username }}</strong>
+        {% if profile_user.is_verified %}<span title="Doğrulanmış" style="color:#60a5fa">✓</span>{% endif %}
+        
+      </div>
+      <div class="profile-username">@{{ profile_user.username }}</div>
+      {% if profile_user.bio %}<div class="profile-bio">{{ profile_user.bio }}</div>{% endif %}
+      <div style="display:flex;gap:1rem;margin-top:0.4rem;flex-wrap:wrap">
+        {% if profile_user.location %}<span style="font-size:0.78rem;color:var(--text2)">📍 {{ profile_user.location }}</span>{% endif %}
+        {% if profile_user.website %}<a href="{{ profile_user.website }}" target="_blank" style="font-size:0.78rem;color:var(--accent)">🔗 Website</a>{% endif %}
+        <div class="online-status">
+          <div class="dot {% if profile_user.is_online %}dot-online{% else %}dot-offline{% endif %}"></div>
+          {% if profile_user.is_online %}Çevrimiçi{% else %}Son görülme: {{ time_ago(profile_user.last_seen) }}{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="profile-actions">
+      {% if current_user.id == profile_user.id %}
+      <a href="/edit_profile" class="btn btn-ghost btn-sm">✏️ Profili Düzenle</a>
+      <button class="btn btn-ghost btn-sm" onclick="showProfileScore()">📊 Profil Skoru</button>
+      {% else %}
+        {% if not blocked %}
+        <button class="btn {% if is_following %}btn-ghost{% else %}btn-primary{% endif %} btn-sm"
+          id="follow-btn" onclick="toggleFollow({{ profile_user.id }},this)">
+          {% if is_following %}✓ Takiptesin{% else %}+ Takip Et{% endif %}
+        </button>
+        <a href="/messages/{{ profile_user.username }}" class="btn btn-ghost btn-sm">💬 Mesaj</a>
+        <button class="btn btn-ghost btn-sm" onclick="toggleBlock({{ profile_user.id }},this)">
+          {% if blocked %}🔓 Engeli Kaldır{% else %}🚫 Engelle{% endif %}
+        </button>
+        {% else %}
+        <button class="btn btn-ghost btn-sm" onclick="toggleBlock({{ profile_user.id }},this)">🔓 Engeli Kaldır</button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="pstat"><strong>{{ profile_user.post_count or 0 }}</strong><span>Gönderi</span></div>
+    <a href="/followers/{{ profile_user.username }}" style="text-decoration:none"><div class="pstat"><strong id="follower-count">{{ follower_count }}</strong><span>Takipçi</span></div></a>
+    <a href="/following/{{ profile_user.username }}" style="text-decoration:none"><div class="pstat"><strong>{{ following_count }}</strong><span>Takip</span></div></a>
+    <div class="pstat" title="Toplam XP"><strong>{{ profile_user.xp or 0 }}</strong><span>XP</span></div>
+    {% if current_user.id == profile_user.id %}
+    <div class="pstat" title="Profil görüntülenme"><strong>{{ view_count }}</strong><span>Görüntülenme</span></div>
+    {% endif %}
+  </div>
+  {% if common_follows %}
+  <div style="padding:0 1.5rem;font-size:0.78rem;color:var(--text2);display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap">
+    <span>🤝 Ortak takip:</span>
+    {% for cf in common_follows %}<a href="/profile/{{ cf.username }}" style="color:var(--accent)">@{{ cf.username }}</a>{% if not loop.last %},{% endif %}{% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- LAYOUT -->
+  <div class="p-layout">
+    <!-- SIDEBAR -->
+    <div>
+      <!-- AI PROFILE SCORE (own profile) -->
+      {% if current_user.id == profile_user.id %}
+      <div class="p-sidebar-box" id="profileScoreBox" style="display:none">
+        <h4>📊 Profil Tamamlanma</h4>
+        <div id="scoreContent">Yükleniyor...</div>
+      </div>
+      {% endif %}
+
+      <!-- XP & LEVEL -->
+      <div class="p-sidebar-box">
+        <h4>⚡ Seviye & XP</h4>
+        
+        <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.5rem">
+          <span style="font-size:1.8rem"></span>
+          <div style="flex:1">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem"></div>
+            <div class="xp-bar" style="margin-top:4px"><div class="xp-fill" style="width:{{ [((profile_user.xp or 0) % 500)/5,100]|min }}%"></div></div>
+          </div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text2)">{{ profile_user.xp or 0 }} XP</div>
+      </div>
+
+      <!-- BADGES -->
+      {% if badges %}
+      <div class="p-sidebar-box">
+        <h4>🏅 Rozetler</h4>
+        <div class="badges-grid">
+          {% for b in badges %}
+          <div class="badge-item" title="{{ b.desc }}">{{ b.icon }} {{ b.name }}</div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- SERTİFİKALAR -->
+      {% if certs %}
+      <div class="p-sidebar-box">
+        <h4>🎖️ Sertifikalar</h4>
+        {% for c in certs %}
+        <div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.03)">
+          <span style="font-size:1.2rem">{% if c.file_url and c.file_url.endswith('.pdf') %}📄{% else %}🏅{% endif %}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.name }}</div>
+            <div style="font-size:0.7rem;color:var(--text2)">{{ c.issuer or '' }}{% if c.year %} · {{ c.year }}{% endif %}</div>
+          </div>
+          {% if c.file_url %}<a href="{{ media_url(c.file_url) }}" target="_blank" style="font-size:0.75rem;color:var(--accent);flex-shrink:0">Görüntüle</a>{% endif %}
+        </div>
+        {% endfor %}
+        {% if current_user.id == profile_user.id %}
+        <button class="btn btn-ghost btn-sm" style="margin-top:0.6rem;width:100%" onclick="openModal('certModal')">+ Sertifika Ekle</button>
+        {% endif %}
+      </div>
+      {% elif current_user.id == profile_user.id %}
+      <div class="p-sidebar-box">
+        <h4>🎖️ Sertifikalar</h4>
+        <button class="btn btn-ghost btn-sm" style="width:100%" onclick="openModal('certModal')">+ Sertifika Ekle</button>
+      </div>
+      {% endif %}
+
+      <!-- CATEGORIES -->
+      {% if tags %}
+      <div class="p-sidebar-box">
+        <h4>🏷️ Alanlar</h4>
+        <div class="tag-list">
+          {% for t in tags %}
+          <a href="/explore?category={{ t.category|urlencode }}&sub={{ t.subcategory|urlencode }}" class="tag-pill" style="text-decoration:none">{{ t.subcategory }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- EDUCATION -->
+      {% if education %}
+      <div class="p-sidebar-box">
+        <h4>🎓 Eğitim</h4>
+        {% for e in education %}
+        <div class="cv-item">
+          <div class="cv-dot"></div>
+          <div class="cv-body">
+            <strong>{{ e.school }}</strong>
+            <span>{{ e.degree }} — {{ e.field }}<br>{{ e.start_year }} – {{ e.end_year or 'Devam ediyor' }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- EXPERIENCE -->
+      {% if experience %}
+      <div class="p-sidebar-box">
+        <h4>💼 Deneyim</h4>
+        {% for e in experience %}
+        <div class="cv-item">
+          <div class="cv-dot" style="background:var(--accent3)"></div>
+          <div class="cv-body">
+            <strong>{{ e.position }}</strong>
+            <span>{{ e.company }}<br>{{ e.start_year }} – {% if e.current %}Devam ediyor{% else %}{{ e.end_year }}{% endif %}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- LINKS -->
+      {% if links %}
+      <div class="p-sidebar-box">
+        <h4>🔗 Bağlantılar</h4>
+        {% for l in links %}
+        <a href="{{ l.url }}" target="_blank" style="display:block;font-size:0.82rem;color:var(--accent);margin-bottom:0.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.platform }}: {{ l.url }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- MAIN -->
+    <div>
+      <!-- TABS -->
+      <div class="profile-tabs">
+        <a href="/profile/{{ profile_user.username }}?tab=posts" class="ptab {% if tab=='posts' %}active{% endif %}">✍️ Gönderiler</a>
+        <a href="/profile/{{ profile_user.username }}?tab=media" class="ptab {% if tab=='media' %}active{% endif %}">📷 Medya</a>
+        <a href="/profile/{{ profile_user.username }}?tab=likes" class="ptab {% if tab=='likes' %}active{% endif %}">❤️ Beğeniler</a>
+        {% if current_user.id == profile_user.id %}
+        <a href="#" class="ptab" onclick="loadAIPanel();event.preventDefault()">🤖 YZ Önerileri</a>
+        {% endif %}
+      </div>
+
+      <!-- AI PANEL (hidden by default) -->
+      <div id="aiPanel" style="display:none;margin-bottom:1rem">
+        <div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);border-radius:16px;padding:1.2rem">
+          <h4 style="font-size:0.85rem;margin-bottom:0.8rem;display:flex;align-items:center;gap:0.4rem">🤖 YZ Paylaşım Önerileri <span style="font-size:0.7rem;color:var(--text2)">(Beğendiğini kopyala)</span></h4>
+          <div id="aiSuggestions" style="display:grid;gap:0.5rem">
+            <div style="color:var(--muted);font-size:0.82rem">Yükleniyor...</div>
+          </div>
+          <div style="margin-top:0.8rem;border-top:1px solid var(--border);padding-top:0.8rem">
+            <h4 style="font-size:0.85rem;margin-bottom:0.6rem">💡 Biyografi Önerisi</h4>
+            <button class="btn btn-ghost btn-sm" onclick="suggestBio()">YZ ile Biyografi Öner</button>
+            <div id="bioSuggestion" style="margin-top:0.5rem;font-size:0.83rem;color:var(--text2);display:none"></div>
+          </div>
+        </div>
+      </div>
+
+      {% if tab == 'media' %}
+      <!-- MEDIA GRID -->
+      <div class="media-grid" id="mediaGrid">
+        {% for post in posts %}
+        {% if post.media_url %}
+        <div class="media-thumb" onclick="window.open('{{ media_url(post.media_url) }}')">
+          <img src="{{ media_url(post.media_url) }}" alt="Medya" loading="lazy">
+        </div>
+        {% endif %}
+        {% else %}
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)">Henüz medya paylaşımı yok.</div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <!-- POSTS -->
+      {% if blocked %}
+      <div style="text-align:center;padding:4rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">🚫</div><p>Bu kullanıcıyı engellediniz.</p></div>
+      {% elif profile_user.is_private and not is_following and current_user.id != profile_user.id %}
+      <div style="text-align:center;padding:4rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">🔒</div><p>Bu hesap gizli.<br>Gönderileri görmek için takip isteği gönder.</p></div>
+      {% else %}
+        {% for post in posts %}
+        <div class="post-card" id="post-{{ post.id }}">
+          <div class="post-header">
+            <div class="avatar av-md" style="background:{{ post.avatar_color }}">
+              {% if post.avatar %}<img src="{{ media_url(post.avatar) }}">{% else %}{{ (post.full_name or post.username)[0].upper() }}{% endif %}
+            </div>
+            <div class="post-meta" style="flex:1;min-width:0">
+              <strong>{{ post.full_name or post.username }}{% if post.is_verified %}<span class="verified">✓</span>{% endif %}</strong>
+              <span>{{ time_ago(post.created_at) }}</span>
+            </div>
+            {% if current_user.id == profile_user.id %}
+            <button class="act-btn" onclick="deletePost({{ post.id }})">🗑️</button>
+            {% endif %}
+          </div>
+          <div class="post-content">{{ post.content }}</div>
+            {% if post.media_url %}
+              {% set mu = media_url(post.media_url) %}
+              {% if post.media_type == 'video' %}
+              <video src="{{ mu }}" controls style="width:100%;border-radius:12px;max-height:360px;margin-bottom:0.8rem"></video>
+              {% else %}
+              <img src="{{ mu }}" class="post-img">
+              {% endif %}
+            {% endif %}
+          <div class="post-actions" id="pa-{{ post.id }}">
+            <button class="act-btn {% if post.liked %}liked{% endif %}" onclick="likePost({{ post.id }},this)">
+              <span class="le">{% if post.liked %}❤️{% else %}🤍{% endif %}</span><span class="lc">{{ post.like_count }}</span>
+            </button>
+            <button class="act-btn" onclick="toggleComments({{ post.id }})">💬 <span class="cc">{{ post.comment_count }}</span></button>
+            <button class="act-btn {% if post.bookmarked %}bookmarked{% endif %}" onclick="bookmarkPost({{ post.id }},this)">
+              <span class="be">{% if post.bookmarked %}🔖{% else %}🏷️{% endif %}</span>
+            </button>
+          </div>
+          <div class="comments-area" id="cmt-{{ post.id }}">
+            <div class="cmt-list"></div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.7rem">
+              <div class="avatar av-sm" style="background:{{ current_user_obj.avatar_color }}">
+                {% if current_user_obj.avatar %}<img src="{{ media_url(current_user_obj.avatar) }}">
+                {% else %}{{ (current_user_obj.full_name or current_user_obj.username)[0].upper() }}{% endif %}
+              </div>
+              <input class="comment-input" placeholder="Yorum yaz..." onkeydown="if(event.key==='Enter')submitComment({{ post.id }})">
+              <button class="btn btn-primary btn-sm" onclick="submitComment({{ post.id }})">↑</button>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:4rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">✦</div><p>Henüz gönderi yok.</p></div>
+        {% endfor %}
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+<!-- SERTIFIKA MODAL -->
+<div class="modal-overlay" id="certModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hdr"><h3 style="font-size:1rem">🎖️ Sertifika Ekle</h3><button class="modal-close" onclick="closeModal('certModal')">✕</button></div>
+    <div class="field"><label>Sertifika Adı *</label><input id="certName" class="input" placeholder="örn: Python Uzmanlık Sertifikası"></div>
+    <div class="field"><label>Veren Kurum</label><input id="certIssuer" class="input" placeholder="örn: Coursera, Google, Udemy..."></div>
+    <div class="field"><label>Yıl</label><input id="certYear" class="input" type="number" placeholder="2024" min="1990" max="2030"></div>
+    <div class="field">
+      <label>Sertifika Dosyası (PDF veya Görsel)</label>
+      <input type="file" id="certFile" accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="updateCertLabel(this)">
+      <div onclick="document.getElementById('certFile').click()" style="border:1px dashed var(--border);border-radius:9px;padding:1rem;text-align:center;cursor:pointer;font-size:0.8rem;color:var(--text2)" id="certDropLabel">
+        📎 PDF veya görsel seç (opsiyonel)
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="uploadCert()">Sertifikayı Kaydet</button>
+  </div>
+</div>
+
+</div>
+
+<!-- PROFILE SCORE MODAL -->
+<div class="modal-overlay" id="scoreModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hdr"><h3 style="font-size:1rem">📊 Profil Skoru</h3><button class="modal-close" onclick="closeModal('scoreModal')">✕</button></div>
+    <div id="scoreModalContent">Yükleniyor...</div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function uploadAvatar(inp){
+  if(!inp.files[0])return;
+  const fd=new FormData();fd.append('file',inp.files[0]);
+  const r=await fetch('/upload_avatar',{method:'POST',body:fd});
+  const d=await r.json();
+  if(d.success){showToast('Fotoğraf güncellendi!','success');setTimeout(()=>location.reload(),600);}
+  else showToast(d.error||'Hata','error');
+}
+async function uploadCover(inp){
+  if(!inp.files[0])return;
+  const fd=new FormData();fd.append('file',inp.files[0]);
+  const r=await fetch('/upload_cover',{method:'POST',body:fd});
+  const d=await r.json();
+  if(d.success){showToast('Kapak güncellendi!','success');setTimeout(()=>location.reload(),600);}
+  else showToast(d.error||'Hata','error');
+}
+async function toggleBlock(uid,btn){
+  const r=await fetch(`/block/${uid}`,{method:'POST'});
+  const d=await r.json();
+  btn.textContent=d.blocked?'🔓 Engeli Kaldır':'🚫 Engelle';
+  showToast(d.blocked?'Engellendi':'Engel kaldırıldı','success');
+}
+let _aiLoaded=false;
+async function loadAIPanel(){
+  const panel=document.getElementById('aiPanel');
+  panel.style.display=panel.style.display==='none'?'block':'none';
+  if(!_aiLoaded&&panel.style.display==='block'){
+    _aiLoaded=true;
+    const r=await fetch('/api/ai/suggest_posts');
+    const d=await r.json();
+    const el=document.getElementById('aiSuggestions');
+    el.innerHTML=d.suggestions.map(s=>`
+      <div onclick="copyToClipboard('${s.replace(/'/g,"\\'")}',this)" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.7rem;font-size:0.82rem;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="color:var(--text2);font-size:0.7rem;margin-bottom:0.2rem">✦ Kopyala</div>
+        ${s}
+      </div>`).join('');
+  }
+}
+async function suggestBio(){
+  const btn=event.target;btn.disabled=true;btn.textContent='Öneriliyor...';
+  const r=await fetch('/api/ai/suggest_bio',{method:'POST'});
+  const d=await r.json();
+  const el=document.getElementById('bioSuggestion');
+  el.style.display='block';
+  el.innerHTML=`<div style="background:var(--surface);border:1px solid rgba(99,102,241,0.3);border-radius:10px;padding:0.8rem;margin-top:0.4rem">
+    <p style="margin-bottom:0.5rem">${d.suggestion}</p>
+    <button onclick="copyToClipboard('${d.suggestion.replace(/'/g,"\\'")}',this)" class="btn btn-ghost btn-sm">Kopyala</button>
+  </div>`;
+  btn.disabled=false;btn.textContent='YZ ile Biyografi Öner';
+}
+function copyToClipboard(text,btn){
+  navigator.clipboard.writeText(text);
+  const orig=btn.textContent;btn.textContent='✓ Kopyalandı!';
+  setTimeout(()=>btn.textContent=orig,1800);
+  showToast('Panoya kopyalandı','success');
+}
+async function showProfileScore(){
+  openModal('scoreModal');
+  const r=await fetch('/api/ai/profile_score');
+  const d=await r.json();
+  const el=document.getElementById('scoreModalContent');
+  const pct=d.score;
+  const color=pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444';
+  el.innerHTML=`
+    <div style="text-align:center;margin-bottom:1rem">
+      <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:900;color:${color}">${pct}%</div>
+      <div style="font-size:0.82rem;color:var(--text2)">Profil Tamamlanma Skoru</div>
+    </div>
+    <div style="display:grid;gap:0.4rem;margin-bottom:1rem">
+      ${d.checks.map(c=>`
+        <div style="display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.6rem;border-radius:8px;background:${c.done?'rgba(16,185,129,0.05)':'rgba(239,68,68,0.05)'}">
+          <span>${c.done?'✅':'⭕'}</span>
+          <span style="flex:1;font-size:0.82rem">${c.label}</span>
+          <span style="font-size:0.72rem;color:var(--muted)">+${c.points} XP</span>
+        </div>`).join('')}
+    </div>
+    ${d.tips.length?`<div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);border-radius:10px;padding:0.8rem">
+      <div style="font-size:0.75rem;font-weight:600;color:var(--accent);margin-bottom:0.4rem">💡 Öneriler</div>
+      ${d.tips.map(t=>`<div style="font-size:0.8rem;color:var(--text2);padding:0.2rem 0">• ${t}</div>`).join('')}
+    </div>`:''}
+    <div style="margin-top:1rem;text-align:center">
+      <a href="/edit_profile" class="btn btn-primary btn-sm" onclick="closeModal('scoreModal')">Profili Güncelle →</a>
+    </div>`;
+}
+
+function updateCertLabel(inp){
+  if(inp.files[0]) document.getElementById('certDropLabel').textContent='📎 ' + inp.files[0].name;
+}
+async function uploadCert(){
+  const name=document.getElementById('certName').value.trim();
+  if(!name){showToast('Sertifika adı zorunlu','error');return;}
+  const fd=new FormData();
+  fd.append('name',name);
+  fd.append('issuer',document.getElementById('certIssuer').value);
+  fd.append('year',document.getElementById('certYear').value);
+  const file=document.getElementById('certFile').files[0];
+  if(file) fd.append('file',file);
+  const btn=event.target;btn.disabled=true;btn.textContent='Yükleniyor...';
+  const r=await fetch('/upload_certificate',{method:'POST',body:fd});
+  const d=await r.json();
+  if(d.success){showToast('Sertifika eklendi!','success');closeModal('certModal');setTimeout(()=>location.reload(),600);}
+  else showToast(d.error||'Hata','error');
+  btn.disabled=false;btn.textContent='Sertifikayı Kaydet';
+}
+
+</script>
+{% endblock %}

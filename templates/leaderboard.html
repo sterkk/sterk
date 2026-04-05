@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Liderlik Tablosu — Sterk{% endblock %}
+{% block extra_style %}
+.lb-wrap{max-width:700px;margin:0 auto;padding:2rem 1rem;}
+.lb-card{display:flex;align-items:center;gap:1rem;padding:1rem 1.2rem;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:0.6rem;transition:all 0.2s;}
+.lb-card:hover{border-color:rgba(99,102,241,0.3);}
+.lb-rank{font-family:'Syne',sans-serif;font-weight:900;font-size:1.2rem;width:36px;text-align:center;flex-shrink:0;}
+.rank-1{color:#f59e0b;} .rank-2{color:#94a3b8;} .rank-3{color:#cd7c2f;}
+.lb-info{flex:1;min-width:0;}
+.lb-info strong{font-size:0.9rem;display:block;}
+.lb-info span{font-size:0.75rem;color:var(--text2);}
+.lb-xp{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--accent);}
+.top3-wrap{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:1rem;margin-bottom:2rem;}
+.top3-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.2rem;text-align:center;}
+.top3-card.first{border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.04);}
+{% endblock %}
+{% block content %}
+<div class="lb-wrap">
+  <h1 style="font-size:1.4rem;margin-bottom:0.4rem">🏆 Liderlik Tablosu</h1>
+  <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1.5rem">En aktif Sterk kullanıcıları</p>
+  {% if top_users|length >= 3 %}
+  <div class="top3-wrap">
+    {% for i, pos in [(1, top_users[1]), (0, top_users[0]), (2, top_users[2])] %}
+    <div class="top3-card {% if i==0 %}first{% endif %}">
+      <div style="font-size:1.5rem;margin-bottom:0.4rem">{% if i==0 %}🥇{% elif i==1 %}🥈{% else %}🥉{% endif %}</div>
+      <div class="avatar av-md" style="background:{{ pos.avatar_color }};margin:0 auto 0.5rem">
+        {% if pos.avatar %}<img src="{{ media_url(pos.avatar) }}">{% else %}{{ (pos.full_name or pos.username)[0].upper() }}{% endif %}
+      </div>
+      <strong style="font-size:0.85rem;display:block"><a href="/profile/{{ pos.username }}" style="color:var(--text)">{{ pos.full_name or pos.username }}</a></strong>
+      <span style="font-size:0.72rem;color:var(--accent)">{{ pos.xp or 0 }} XP</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% for u in top_users %}
+  <div class="lb-card">
+    <div class="lb-rank {% if loop.index==1 %}rank-1{% elif loop.index==2 %}rank-2{% elif loop.index==3 %}rank-3{% endif %}">
+      {% if loop.index <= 3 %}{% set icons=['🥇','🥈','🥉'] %}{{ icons[loop.index-1] }}{% else %}{{ loop.index }}{% endif %}
+    </div>
+    <a href="/profile/{{ u.username }}">
+      <div class="avatar av-md" style="background:{{ u.avatar_color }}">
+        {% if u.avatar %}<img src="{{ media_url(u.avatar) }}">{% else %}{{ (u.full_name or u.username)[0].upper() }}{% endif %}
+      </div>
+    </a>
+    <div class="lb-info">
+      <strong><a href="/profile/{{ u.username }}" style="color:var(--text)">{{ u.full_name or u.username }}</a></strong>
+      <span>@{{ u.username }} · {{ u.post_count_real }} gönderi · {{ u.follower_count }} takipçi</span>
+      <div class="xp-bar" style="margin-top:4px;max-width:200px"><div class="xp-fill" style="width:{{ [((u.xp or 0) % 500)/5, 100]|min }}%"></div></div>
+    </div>
+    <div class="lb-xp">{{ u.xp or 0 }} XP</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

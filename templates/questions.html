@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Soru & Cevap — Sterk{% endblock %}
+{% block extra_style %}
+.qa-wrap{max-width:800px;margin:0 auto;padding:2rem 1rem;}
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:0.7rem;transition:border-color 0.2s;}
+.q-card:hover{border-color:rgba(99,102,241,0.3);}
+.q-card h3{font-size:0.92rem;margin-bottom:0.4rem;}
+.q-card h3 a{color:var(--text);}
+.q-card h3 a:hover{color:var(--accent);}
+.q-meta{display:flex;gap:1rem;font-size:0.73rem;color:var(--muted);margin-top:0.5rem;}
+{% endblock %}
+{% block content %}
+<div class="qa-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <h1 style="font-size:1.4rem">❓ Soru & Cevap</h1>
+    <button class="btn btn-primary" onclick="openModal('askModal')">+ Soru Sor</button>
+  </div>
+  {% for q in questions %}
+  <div class="q-card">
+    <div style="display:flex;gap:0.7rem">
+      <a href="/profile/{{ q.username }}">
+        <div class="avatar av-sm" style="background:{{ q.avatar_color }}">{{ (q.full_name or q.username)[0].upper() }}</div>
+      </a>
+      <div style="flex:1">
+        <h3><a href="/questions/{{ q.id }}">{{ q.title }}</a></h3>
+        {% if q.content %}<p style="font-size:0.82rem;color:var(--text2)">{{ q.content[:120] }}{% if q.content|length>120 %}...{% endif %}</p>{% endif %}
+        <div class="q-meta">
+          <span>@{{ q.username }}</span>
+          <span>{{ time_ago(q.created_at) }}</span>
+          <span>💬 {{ q.answer_count }} cevap</span>
+          <span>👁️ {{ q.views }} görüntüleme</span>
+          {% if q.category %}<span>📂 {{ q.category }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:4rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">❓</div><p>Henüz soru yok. İlk soruyu sen sor!</p></div>
+  {% endfor %}
+</div>
+<div class="modal-overlay" id="askModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3 style="font-size:1rem">❓ Soru Sor</h3><button class="modal-close" onclick="closeModal('askModal')">✕</button></div>
+    <div class="field"><label>Soru Başlığı</label><input id="qTitle" class="input" placeholder="Ne öğrenmek istiyorsun?"></div>
+    <div class="field"><label>Detay (opsiyonel)</label><textarea id="qContent" class="input" rows="3"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="field"><label>Kategori</label><input id="qCat" class="input" placeholder="Teknoloji, Eğitim..."></div>
+      <div class="field"><label>Etiketler</label><input id="qTags" class="input" placeholder="python, flask..."></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="askQ()">Sor →</button></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function askQ(){const r=await fetch('/questions/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:document.getElementById('qTitle').value,content:document.getElementById('qContent').value,category:document.getElementById('qCat').value,tags:document.getElementById('qTags').value})});if(r.ok){closeModal('askModal');showToast('Sorun yayınlandı!','success');setTimeout(()=>location.reload(),700);}}
+</script>
+{% endblock %}

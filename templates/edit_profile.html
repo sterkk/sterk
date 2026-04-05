@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block title %}Profili Düzenle — Sterk{% endblock %}
+{% block extra_style %}
+.ep-wrap{max-width:740px;margin:0 auto;padding:2rem 1rem 4rem;}
+.ep-section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1rem;}
+.ep-section h3{font-size:0.76rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:1rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.4rem;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+/* LOCK BOX */
+.lock-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:0.85rem 1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:0.7rem;}
+.lock-box .li{font-size:1.4rem;flex-shrink:0;}
+.lock-box .lt{font-size:0.78rem;font-weight:600;color:#fca5a5;margin-bottom:0.2rem;}
+.lock-box .ld{font-size:0.72rem;color:#94a3b8;line-height:1.5;}
+.open-box{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.78rem;color:#6ee7b7;display:flex;align-items:center;gap:0.5rem;}
+/* CAT GRID */
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0.5rem;}
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;cursor:pointer;transition:all 0.2s;}
+.cat-card:hover{border-color:rgba(99,102,241,0.4);}
+.cat-card.expanded{border-color:rgba(99,102,241,0.4);background:rgba(99,102,241,0.04);}
+.cat-head{display:flex;align-items:center;gap:0.4rem;}
+.cat-icon{font-size:1.1rem;}
+.cat-name{font-size:0.8rem;font-weight:600;flex:1;}
+.cat-arr{font-size:0.65rem;color:var(--muted);transition:transform 0.2s;}
+.cat-card.expanded .cat-arr{transform:rotate(90deg);}
+.cat-subs{display:none;flex-wrap:wrap;gap:0.3rem;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border);}
+.cat-card.expanded .cat-subs{display:flex;}
+.sub-chip{padding:0.2rem 0.55rem;border-radius:20px;border:1px solid var(--border);font-size:0.7rem;cursor:pointer;transition:all 0.15s;background:var(--surface);color:var(--text2);}
+.sub-chip:hover{border-color:rgba(99,102,241,0.4);color:#a5b4fc;}
+.sub-chip.sel{background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.4);color:#a5b4fc;}
+/* SELECTED TAGS */
+.sel-area{min-height:36px;display:flex;flex-wrap:wrap;gap:0.35rem;padding:0.5rem;background:rgba(255,255,255,0.02);border:1px dashed rgba(99,102,241,0.2);border-radius:9px;margin-top:0.7rem;}
+.sel-tag{display:flex;align-items:center;gap:0.25rem;padding:0.2rem 0.6rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:20px;font-size:0.72rem;color:#a5b4fc;}
+.sel-tag button{background:none;border:none;color:#6366f1;cursor:pointer;line-height:1;padding:0;}
+.sel-tag button:hover{color:#ef4444;}
+/* COUNTRIES */
+.country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.4rem;max-height:220px;overflow-y:auto;}
+.cnt-btn{padding:0.38rem 0.65rem;border-radius:8px;border:1px solid var(--border);font-size:0.74rem;cursor:pointer;transition:all 0.15s;background:var(--surface);color:var(--text2);text-align:left;}
+.cnt-btn:hover{border-color:rgba(99,102,241,0.3);}
+.cnt-btn.sel{background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.35);color:#a5b4fc;}
+.city-area{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.6rem;}
+.city-chip{padding:0.18rem 0.5rem;border-radius:20px;border:1px solid var(--border);font-size:0.7rem;cursor:pointer;transition:all 0.15s;background:var(--surface);color:var(--text2);}
+.city-chip.sel{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.35);color:#6ee7b7;}
+/* CV ENTRY */
+.cv-entry{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.8rem;margin-bottom:0.5rem;position:relative;}
+.rm-btn{position:absolute;top:0.5rem;right:0.5rem;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem;}
+.rm-btn:hover{color:var(--danger,#ef4444);}
+{% endblock %}
+{% block content %}
+<div class="ep-wrap">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.6rem">
+    <h1 style="font-size:1.25rem;font-family:'Syne',sans-serif">✏️ Profili Düzenle</h1>
+    <div style="display:flex;gap:0.5rem">
+      <button class="btn btn-ghost btn-sm" onclick="suggestBio()">🤖 YZ Bio Öner</button>
+      <a href="/profile/{{ user.username }}" class="btn btn-ghost btn-sm">← Profil</a>
+      <button class="btn btn-primary btn-sm" onclick="saveAll()">Kaydet ✓</button>
+    </div>
+  </div>
+
+  <!-- TEMEL -->
+  <div class="ep-section">
+    <h3>👤 Temel Bilgiler</h3>
+    <div class="grid2">
+      <div class="field"><label>Ad Soyad</label><input id="full_name" class="input" value="{{ user.full_name or '' }}"></div>
+      <div class="field"><label>Kullanıcı Adı</label><input class="input" value="@{{ user.username }}" disabled style="opacity:0.4"></div>
+    </div>
+    <div class="field"><label>Biyografi</label>
+      <textarea id="bio" class="input" rows="2" maxlength="280">{{ user.bio or '' }}</textarea>
+      <div id="bioAI" style="display:none;margin-top:0.5rem"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Yaş</label><input id="age" class="input" type="number" value="{{ user.age or '' }}" min="13" max="100"></div>
+      <div class="field"><label>Cinsiyet</label>
+        <select id="gender" class="input">
+          <option value="">—</option>
+          <option value="Erkek" {% if user.gender=='Erkek' %}selected{% endif %}>Erkek</option>
+          <option value="Kadın" {% if user.gender=='Kadın' %}selected{% endif %}>Kadın</option>
+          <option value="Diğer" {% if user.gender=='Diğer' %}selected{% endif %}>Diğer</option>
+          <option value="Belirtmek İstemiyorum" {% if user.gender=='Belirtmek İstemiyorum' %}selected{% endif %}>Belirtmek İstemiyorum</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>📍 Konum</label><input id="location" class="input" value="{{ user.location or '' }}" placeholder="Şehir, Ülke"></div>
+      <div class="field"><label>🔗 Website</label><input id="website" class="input" value="{{ user.website or '' }}" placeholder="https://..."></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>📞 Telefon</label><input id="phone" class="input" value="{{ user.phone or '' }}" placeholder="+90 5xx..."></div>
+      <div class="field"><label>Hesap Gizliliği</label>
+        <select id="is_private" class="input">
+          <option value="0" {% if not user.is_private %}selected{% endif %}>🌍 Herkese Açık</option>
+          <option value="1" {% if user.is_private %}selected{% endif %}>🔒 Gizli</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- KATEGORİ -->
+  <div class="ep-section">
+    <h3>🏷️ Meslek / Alan Kategorisi</h3>
+    {% if can_change_cat %}
+    <div class="open-box">✅ Kategorini değiştirebilirsin ({{ change_days }} gün kuralı şu an geçerli değil).</div>
+    {% else %}
+    <div class="lock-box">
+      <span class="li">🔒</span>
+      <div>
+        <div class="lt">Kategori değişimi kilitli — {{ days_left }} gün kaldı</div>
+        <div class="ld">Kategori seçimini son değişikliğinden itibaren <strong>{{ change_days }} gün</strong> boyunca değiştiremezsin. Bu süre dolmadan yeni kategori seçemezsin. Mevcut kategorilerin aşağıda görüntülenebilir ancak değiştirilemez.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="cat-grid" id="catGrid"></div>
+    <div class="sel-area" id="selCats"></div>
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:0.4rem" id="catNote"></div>
+  </div>
+
+  <!-- ÜLKE / ŞEHİR -->
+  <div class="ep-section">
+    <h3>🌍 Ülke & Şehir</h3>
+    <p style="font-size:0.77rem;color:var(--text2);margin-bottom:0.8rem">Hangi ülke/şehirden bağlantı kurmak istiyorsun? Max 5 ülke.</p>
+    <div class="country-grid" id="countryGrid"></div>
+    <div id="citySec" style="display:none">
+      <div style="font-size:0.74rem;font-weight:600;color:var(--text2);margin-top:0.8rem;margin-bottom:0.4rem">🏙️ Şehirler:</div>
+      <div class="city-area" id="cityArea"></div>
+    </div>
+    <div class="sel-area" id="selLocs" style="margin-top:0.7rem"></div>
+  </div>
+
+  <!-- SOSYAL BAĞLANTILAR -->
+  <div class="ep-section">
+    <h3>🔗 Sosyal Bağlantılar</h3>
+    <div id="linksList">
+      {% for l in links %}
+      <div class="cv-entry" data-platform="{{ l.platform }}" data-url="{{ l.url }}">
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <span style="font-size:1.1rem">{{ {'Twitter':'🐦','Instagram':'📷','LinkedIn':'💼','GitHub':'💻','YouTube':'▶️','TikTok':'🎵'}.get(l.platform,'🔗') }}</span>
+          <div style="flex:1">
+            <div style="font-size:0.73rem;color:var(--text2)">{{ l.platform }}</div>
+            <div style="font-size:0.8rem">{{ l.url }}</div>
+          </div>
+          <button class="rm-btn" onclick="this.closest('.cv-entry').remove()">✕</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="addLink()">+ Bağlantı Ekle</button>
+      <select id="newLinkPlatform" class="input" style="width:auto;font-size:0.78rem">
+        <option>Twitter</option><option>Instagram</option><option>LinkedIn</option>
+        <option>GitHub</option><option>YouTube</option><option>TikTok</option><option>Diğer</option>
+      </select>
+      <input id="newLinkUrl" class="input" style="flex:1;min-width:180px;font-size:0.78rem" placeholder="URL...">
+    </div>
+  </div>
+
+  <!-- EĞİTİM -->
+  <div class="ep-section">
+    <h3>🎓 Eğitim</h3>
+    <div id="eduList">
+      {% for e in education %}
+      <div class="cv-entry">
+        <button class="rm-btn" onclick="this.closest('.cv-entry').remove()">✕</button>
+        <div class="grid2" style="gap:0.5rem">
+          <input class="input edu-school" value="{{ e.school or '' }}" placeholder="Okul/Üniversite" style="font-size:0.8rem">
+          <input class="input edu-degree" value="{{ e.degree or '' }}" placeholder="Lisans/Yüksek Lisans" style="font-size:0.8rem">
+          <input class="input edu-field" value="{{ e.field or '' }}" placeholder="Bölüm/Alan" style="font-size:0.8rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+            <input class="input edu-start" type="number" value="{{ e.start_year or '' }}" placeholder="Başlangıç" style="font-size:0.8rem">
+            <input class="input edu-end" type="number" value="{{ e.end_year or '' }}" placeholder="Bitiş" style="font-size:0.8rem">
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:0.4rem" onclick="addEdu()">+ Eğitim Ekle</button>
+  </div>
+
+  <!-- DENEYİM -->
+  <div class="ep-section">
+    <h3>💼 İş Deneyimi</h3>
+    <div id="expList">
+      {% for e in experience %}
+      <div class="cv-entry">
+        <button class="rm-btn" onclick="this.closest('.cv-entry').remove()">✕</button>
+        <div class="grid2" style="gap:0.5rem">
+          <input class="input exp-company" value="{{ e.company or '' }}" placeholder="Şirket" style="font-size:0.8rem">
+          <input class="input exp-position" value="{{ e.position or '' }}" placeholder="Pozisyon" style="font-size:0.8rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+            <input class="input exp-start" type="number" value="{{ e.start_year or '' }}" placeholder="Başlangıç" style="font-size:0.8rem">
+            <input class="input exp-end" type="number" value="{{ e.end_year or '' }}" placeholder="Bitiş" style="font-size:0.8rem">
+          </div>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.78rem">
+            <input type="checkbox" class="exp-current" {% if e.current %}checked{% endif %} style="accent-color:#6366f1"> Devam ediyor
+          </label>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:0.4rem" onclick="addExp()">+ Deneyim Ekle</button>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const PROFESSIONS = {{ professions|tojson }};
+const COUNTRY_CITIES = {{ country_cities|tojson }};
+const CAN_CHANGE = {{ 'true' if can_change_cat else 'false' }};
+const MAX_PROF = 3, MAX_CNT = 5;
+
+let selProf = {{ tags|selectattr('category', 'ne', 'Ülkeler')|list|tojson }};
+let selCountries = [];
+let selCities = [];
+
+// Pre-load existing location tags
+{% for t in tags %}
+{% if t.country and t.category == 'Ülkeler' and not t.city %}
+selCountries.push('{{ t.country }}');
+{% endif %}
+{% if t.city %}
+selCities.push({country:'{{ t.country }}',city:'{{ t.city }}'});
+{% endif %}
+{% endfor %}
+
+// ── PROF GRID ──
+(function buildCatGrid(){
+  const grid = document.getElementById('catGrid');
+  for(const [cat, data] of Object.entries(PROFESSIONS)){
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+    card.innerHTML = `<div class="cat-head" onclick="expandCat(this.parentElement,'${esc(cat)}')">
+      <span class="cat-icon">${data.icon}</span><span class="cat-name">${cat}</span><span class="cat-arr">›</span>
+    </div>
+    <div class="cat-subs">${data.subs.map(s=>`<div class="sub-chip ${selProf.some(t=>t.category===cat&&t.subcategory===s)?'sel':''}" data-cat="${esc(cat)}" data-sub="${esc(s)}" onclick="toggleCat(this,'${esc(cat)}','${esc(s)}')">${s}</div>`).join('')}</div>`;
+    grid.appendChild(card);
+  }
+  renderSelCats();
+})();
+
+function expandCat(card, cat){
+  document.querySelectorAll('.cat-card').forEach(c=>{if(c!==card)c.classList.remove('expanded');});
+  card.classList.toggle('expanded');
+}
+
+function toggleCat(btn, cat, sub){
+  if(!CAN_CHANGE){ showToast("Kategori kilitli — "+ {{ days_left }} +" gün daha beklemelisin","error"); return; }
+  const idx = selProf.findIndex(t=>t.category===cat&&t.subcategory===sub);
+  if(idx>=0){ selProf.splice(idx,1); btn.classList.remove('sel'); }
+  else {
+    if(selProf.length>=MAX_PROF){ showToast('Max 3 meslek/alan seçebilirsin','error'); return; }
+    selProf.push({category:cat,subcategory:sub,type:'profession',country:'',city:''});
+    btn.classList.add('sel');
+  }
+  renderSelCats();
+}
+
+function renderSelCats(){
+  const area = document.getElementById('selCats');
+  if(!selProf.length){ area.innerHTML='<span style="color:var(--muted);font-size:0.76rem;align-self:center">Meslek/alan seçilmedi</span>'; return; }
+  area.innerHTML = selProf.map((t,i)=>`
+    <div class="sel-tag">${PROFESSIONS[t.category]?.icon||''} ${t.subcategory}
+      ${CAN_CHANGE?`<button onclick="removeProf(${i})">✕</button>`:''}</div>`).join('');
+  document.getElementById('catNote').textContent = `${selProf.length}/${MAX_PROF} seçildi`;
+}
+
+function removeProf(i){
+  const t=selProf[i];selProf.splice(i,1);
+  document.querySelector(`.sub-chip[data-cat="${esc(t.category)}"][data-sub="${esc(t.subcategory)}"]`)?.classList.remove('sel');
+  renderSelCats();
+}
+
+// ── COUNTRY / CITY ──
+(function buildCountryGrid(){
+  const grid = document.getElementById('countryGrid');
+  for(const country of Object.keys(COUNTRY_CITIES)){
+    const btn = document.createElement('div');
+    btn.className = 'cnt-btn' + (selCountries.includes(country)?' sel':'');
+    btn.textContent = country;
+    btn.dataset.country = country;
+    btn.onclick = ()=>toggleCnt(btn,country);
+    grid.appendChild(btn);
+  }
+  renderCities(); renderSelLoc();
+})();
+
+function toggleCnt(btn,country){
+  const idx=selCountries.indexOf(country);
+  if(idx>=0){ selCountries.splice(idx,1); btn.classList.remove('sel'); selCities=selCities.filter(c=>c.country!==country); }
+  else { if(selCountries.length>=MAX_CNT){ showToast('Max 5 ülke seçebilirsin','error'); return; } selCountries.push(country); btn.classList.add('sel'); }
+  renderCities(); renderSelLoc();
+}
+
+function renderCities(){
+  const sec=document.getElementById('citySec'), area=document.getElementById('cityArea');
+  if(!selCountries.length){ sec.style.display='none'; return; }
+  sec.style.display='block'; area.innerHTML='';
+  for(const c of selCountries){
+    (COUNTRY_CITIES[c]||[]).forEach(city=>{
+      const chip=document.createElement('div');
+      chip.className='city-chip'+(selCities.some(x=>x.country===c&&x.city===city)?' sel':'');
+      chip.textContent=city;
+      chip.onclick=()=>toggleCity(chip,c,city);
+      area.appendChild(chip);
+    });
+  }
+}
+
+function toggleCity(btn,country,city){
+  const idx=selCities.findIndex(c=>c.country===country&&c.city===city);
+  if(idx>=0){ selCities.splice(idx,1); btn.classList.remove('sel'); }
+  else { selCities.push({country,city}); btn.classList.add('sel'); }
+  renderSelLoc();
+}
+
+function renderSelLoc(){
+  const area=document.getElementById('selLocs');
+  const all=[...selCountries.map(c=>({t:'country',l:c})),...selCities.map(c=>({t:'city',l:`${c.city} (${c.country})`}))];
+  if(!all.length){ area.innerHTML='<span style="color:var(--muted);font-size:0.76rem;align-self:center">Ülke/şehir seçilmedi</span>'; return; }
+  area.innerHTML=all.map(i=>`<div class="sel-tag" style="${i.t==='city'?'background:rgba(16,185,129,0.07);border-color:rgba(16,185,129,0.25)':''}">${i.t==='city'?'🏙️':'🌍'} ${i.l}</div>`).join('');
+}
+
+function esc(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+// ── FORM HELPERS ──
+function addLink(){
+  const p=document.getElementById('newLinkPlatform').value, u=document.getElementById('newLinkUrl').value.trim();
+  if(!u) return;
+  const icons={'Twitter':'🐦','Instagram':'📷','LinkedIn':'💼','GitHub':'💻','YouTube':'▶️','TikTok':'🎵'};
+  const el=document.createElement('div');el.className='cv-entry';el.dataset.platform=p;el.dataset.url=u;
+  el.innerHTML=`<div style="display:flex;gap:0.5rem;align-items:center"><span>${icons[p]||'🔗'}</span><div style="flex:1"><div style="font-size:0.73rem;color:var(--text2)">${p}</div><div style="font-size:0.8rem">${u}</div></div><button class="rm-btn" onclick="this.closest('.cv-entry').remove()">✕</button></div>`;
+  document.getElementById('linksList').appendChild(el);
+  document.getElementById('newLinkUrl').value='';
+}
+
+function addEdu(){
+  const el=document.createElement('div');el.className='cv-entry';
+  el.innerHTML=`<button class="rm-btn" onclick="this.closest('.cv-entry').remove()">✕</button><div class="grid2" style="gap:0.5rem"><input class="input edu-school" placeholder="Okul/Üniversite" style="font-size:0.8rem"><input class="input edu-degree" placeholder="Lisans/Yüksek Lisans" style="font-size:0.8rem"><input class="input edu-field" placeholder="Bölüm/Alan" style="font-size:0.8rem"><div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem"><input class="input edu-start" type="number" placeholder="Başlangıç" style="font-size:0.8rem"><input class="input edu-end" type="number" placeholder="Bitiş" style="font-size:0.8rem"></div></div>`;
+  document.getElementById('eduList').appendChild(el);
+}
+
+function addExp(){
+  const el=document.createElement('div');el.className='cv-entry';
+  el.innerHTML=`<button class="rm-btn" onclick="this.closest('.cv-entry').remove()">✕</button><div class="grid2" style="gap:0.5rem"><input class="input exp-company" placeholder="Şirket" style="font-size:0.8rem"><input class="input exp-position" placeholder="Pozisyon" style="font-size:0.8rem"><div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem"><input class="input exp-start" type="number" placeholder="Başlangıç" style="font-size:0.8rem"><input class="input exp-end" type="number" placeholder="Bitiş" style="font-size:0.8rem"></div><label style="display:flex;align-items:center;gap:0.4rem;font-size:0.78rem"><input type="checkbox" class="exp-current" style="accent-color:#6366f1"> Devam ediyor</label></div>`;
+  document.getElementById('expList').appendChild(el);
+}
+
+async function suggestBio(){
+  const btn=event.target;btn.disabled=true;btn.textContent='⏳';
+  const r=await fetch('/api/ai/suggest_bio',{method:'POST'});
+  const d=await r.json();
+  const el=document.getElementById('bioAI');el.style.display='block';
+  el.innerHTML=`<div style="background:rgba(99,102,241,0.05);border:1px solid rgba(99,102,241,0.2);border-radius:9px;padding:0.7rem;font-size:0.82rem">${d.suggestion}<br><button onclick="document.getElementById('bio').value='${esc(d.suggestion)}';this.parentElement.parentElement.style.display='none';showToast('Bio güncellendi','success')" class="btn btn-primary btn-sm" style="margin-top:0.4rem">Kullan</button> <button onclick="this.parentElement.parentElement.style.display='none'" class="btn btn-ghost btn-sm">İptal</button></div>`;
+  btn.disabled=false;btn.textContent='🤖 YZ Bio Öner';
+}
+
+async function saveAll(){
+  const tags=[
+    ...selProf.map(t=>({...t,country:'',city:''})),
+    ...selCountries.map(c=>({type:'country',category:'Ülkeler',subcategory:c,country:c,city:''})),
+    ...selCities.map(c=>({type:'city',category:'Ülkeler',subcategory:c.city,country:c.country,city:c.city}))
+  ];
+  const links=[...document.querySelectorAll('#linksList .cv-entry')].map(e=>({platform:e.dataset.platform,url:e.dataset.url}));
+  const education=[...document.querySelectorAll('#eduList .cv-entry')].map(e=>({school:e.querySelector('.edu-school')?.value||'',degree:e.querySelector('.edu-degree')?.value||'',field:e.querySelector('.edu-field')?.value||'',start_year:e.querySelector('.edu-start')?.value||null,end_year:e.querySelector('.edu-end')?.value||null})).filter(e=>e.school);
+  const experience=[...document.querySelectorAll('#expList .cv-entry')].map(e=>({company:e.querySelector('.exp-company')?.value||'',position:e.querySelector('.exp-position')?.value||'',start_year:e.querySelector('.exp-start')?.value||null,end_year:e.querySelector('.exp-end')?.value||null,current:e.querySelector('.exp-current')?.checked?1:0})).filter(e=>e.company);
+
+  const r=await fetch('/edit_profile',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({full_name:document.getElementById('full_name').value,age:document.getElementById('age').value||null,gender:document.getElementById('gender').value,bio:document.getElementById('bio').value,location:document.getElementById('location').value,website:document.getElementById('website').value,phone:document.getElementById('phone').value,is_private:parseInt(document.getElementById('is_private').value),tags,links,education,experience})});
+  if(r.ok){showToast('Profil kaydedildi ✓','success');setTimeout(()=>location.href='/profile/{{ user.username }}',700);}
+  else{const d=await r.json();showToast(d.error||'Kayıt hatası','error');}
+}
+</script>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Gruplar — Sterk{% endblock %}
+{% block extra_style %}
+.groups-wrap{max-width:900px;margin:0 auto;padding:2rem 1rem;}
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:2rem;}
+.group-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem;transition:all 0.2s;text-decoration:none;color:var(--text);display:block;}
+.group-card:hover{border-color:rgba(99,102,241,0.3);transform:translateY(-2px);}
+.group-icon{width:50px;height:50px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:0.8rem;}
+.group-card h3{font-size:0.92rem;margin-bottom:0.3rem;}
+.group-card p{font-size:0.78rem;color:var(--text2);line-height:1.5;}
+{% endblock %}
+{% block content %}
+<div class="groups-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <h1 style="font-size:1.4rem">👥 Gruplar</h1>
+    <button class="btn btn-primary" onclick="openModal('createGroupModal')">+ Grup Oluştur</button>
+  </div>
+  {% if my_groups %}
+  <h3 style="font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.8rem">Üye Olduğum Gruplar</h3>
+  <div class="groups-grid">
+    {% for g in my_groups %}
+    <a href="/groups/{{ g.id }}" class="group-card">
+      <div class="group-icon">👥</div>
+      <h3>{{ g.name }}</h3>
+      <p>{{ g.description or 'Açıklama yok' }}</p>
+      <div style="font-size:0.72rem;color:var(--accent);margin-top:0.5rem">{{ g.role }}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <h3 style="font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.8rem">Tüm Gruplar</h3>
+  <div class="groups-grid">
+    {% for g in all_groups %}
+    <div class="group-card" style="display:block">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="group-icon">👥</div>
+        {% if not g.is_member %}
+        <button class="btn btn-primary btn-sm" onclick="joinGroup({{ g.id }},this)">Katıl</button>
+        {% else %}
+        <span style="font-size:0.72rem;color:var(--success)">✓ Üyesin</span>
+        {% endif %}
+      </div>
+      <h3><a href="/groups/{{ g.id }}" style="color:var(--text)">{{ g.name }}</a></h3>
+      <p>{{ g.description or '' }}</p>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:0.5rem">{{ g.member_count }} üye {% if g.category %}· {{ g.category }}{% endif %}</div>
+    </div>
+    {% else %}
+    <div style="color:var(--muted);font-size:0.85rem;padding:2rem">Henüz grup yok. İlk grubu sen oluştur!</div>
+    {% endfor %}
+  </div>
+</div>
+<div class="modal-overlay" id="createGroupModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hdr"><h3 style="font-size:1rem">👥 Grup Oluştur</h3><button class="modal-close" onclick="closeModal('createGroupModal')">✕</button></div>
+    <div class="field"><label>Grup Adı</label><input id="gName" class="input" placeholder="Grubun adı..."></div>
+    <div class="field"><label>Açıklama</label><textarea id="gDesc" class="input" rows="2" placeholder="Grup hakkında..."></textarea></div>
+    <div class="field"><label>Kategori</label><input id="gCat" class="input" placeholder="Teknoloji, Eğitim..."></div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="createGroup()">Oluştur</button></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function createGroup(){const r=await fetch('/groups/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('gName').value,description:document.getElementById('gDesc').value,category:document.getElementById('gCat').value})});if(r.ok){const d=await r.json();closeModal('createGroupModal');showToast('Grup oluşturuldu!','success');setTimeout(()=>location.href=`/groups/${d.id}`,700);}}
+async function joinGroup(id,btn){const r=await fetch(`/groups/${id}/join`,{method:'POST'});const d=await r.json();btn.textContent=d.joined?'✓ Üyesin':'Katıl';showToast(d.joined?'Gruba katıldın!':'Gruptan ayrıldın','success');}
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ list_type }}{% endblock %}
+{% block extra_style %}
+.list-wrap{max-width:580px;margin:0 auto;padding:2rem 1rem;}
+.user-row{display:flex;align-items:center;gap:0.9rem;padding:0.9rem 1.1rem;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:0.6rem;text-decoration:none;color:var(--text);transition:all 0.2s;}
+.user-row:hover{border-color:rgba(99,102,241,0.3);}
+{% endblock %}
+{% block content %}
+<div class="list-wrap">
+    <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem">
+        <a href="/profile/{{ profile_user.username }}" class="btn btn-ghost btn-sm">← Geri</a>
+        <h1 style="font-size:1.2rem">{{ list_type }} — <span style="color:var(--accent)">@{{ profile_user.username }}</span></h1>
+    </div>
+    {% for u in users %}
+    <a href="/profile/{{ u.username }}" class="user-row">
+        <div class="avatar avatar-md" style="background:{{ u.avatar_color }}">{{ (u.full_name or u.username)[0].upper() }}</div>
+        <div style="flex:1;min-width:0">
+            <strong style="font-size:0.9rem;display:block">{{ u.full_name or u.username }}</strong>
+            <span style="font-size:0.78rem;color:var(--text2)">@{{ u.username }} · {{ u.follower_count }} takipçi</span>
+        </div>
+        {% if u.id != current_user.id %}
+        <button class="btn btn-primary btn-sm" onclick="event.preventDefault();toggleFollow({{ u.id }}, this)">+ Takip</button>
+        {% endif %}
+    </a>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--muted)">Henüz kimse yok.</div>
+    {% endfor %}
+</div>
+{% endblock %}

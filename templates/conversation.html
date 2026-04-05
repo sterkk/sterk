@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ other.username }} ile Mesajlar{% endblock %}
+{% block extra_style %}
+.conv-wrap{max-width:700px;margin:0 auto;padding:1.5rem 1rem;display:flex;flex-direction:column;height:calc(100vh - 80px);}
+.conv-header{display:flex;align-items:center;gap:0.8rem;padding:1rem 1.2rem;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:1rem;}
+.conv-header strong{font-size:0.95rem;}
+.conv-header span{font-size:0.78rem;color:var(--text2);}
+.messages-area{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0.6rem;padding-right:0.3rem;}
+.msg-bubble{display:flex;gap:0.5rem;max-width:80%;}
+.msg-bubble.mine{align-self:flex-end;flex-direction:row-reverse;}
+.bubble-content{padding:0.6rem 0.9rem;border-radius:14px;font-size:0.88rem;line-height:1.5;}
+.msg-bubble:not(.mine) .bubble-content{background:var(--card);border:1px solid var(--border);}
+.msg-bubble.mine .bubble-content{background:var(--grad);color:white;}
+.msg-time{font-size:0.65rem;color:var(--muted);margin-top:0.2rem;align-self:flex-end;}
+.msg-input-row{display:flex;gap:0.6rem;padding:0.8rem 0 0;border-top:1px solid var(--border);margin-top:0.8rem;}
+.msg-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;padding:0.7rem 1rem;outline:none;resize:none;min-height:44px;}
+.msg-input:focus{border-color:var(--accent);}
+.send-btn{padding:0.7rem 1.2rem;background:var(--gradient);color:white;border:none;border-radius:12px;cursor:pointer;font-size:1rem;transition:opacity 0.2s;}
+.send-btn:hover{opacity:0.85;}
+{% endblock %}
+{% block content %}
+<div class="conv-wrap">
+    <div class="conv-header">
+        <a href="/profile/{{ other.username }}">
+            <div class="avatar av-md" style="background:{{ other.avatar_color }};border-radius:50%">{% if other.avatar %}<img src="{{ media_url(other.avatar) }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">{% else %}{{ (other.full_name or other.username)[0].upper() }}{% endif %}</div>
+        </a>
+        <div>
+            <strong><a href="/profile/{{ other.username }}" style="color:var(--text)">{{ other.full_name or other.username }}</a></strong>
+            <span>@{{ other.username }}</span>
+        </div>
+        <a href="/messages" class="btn btn-ghost btn-sm" style="margin-left:auto">← Geri</a>
+    </div>
+    <div class="messages-area" id="msgArea">
+        {% for m in msgs %}
+        <div class="msg-bubble {% if m.sender_id == session.user_id %}mine{% endif %}">
+            {% if m.sender_id != session.user_id %}
+            <div class="avatar av-sm" style="background:{{ m.avatar_color }};border-radius:50%">{% if m.avatar %}<img src="{{ media_url(m.avatar) }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">{% else %}{{ (m.full_name or m.username)[0].upper() }}{% endif %}</div>
+            {% endif %}
+            <div>
+                <div class="bubble-content">{{ m.content }}</div>
+                <div class="msg-time">{{ time_ago(m.created_at) }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% if not msgs %}
+        <div style="text-align:center;color:var(--muted);padding:2rem;font-size:0.85rem">Konuşmayı başlatmak için bir mesaj gönder 👋</div>
+        {% endif %}
+    </div>
+    <div class="msg-input-row">
+        <textarea class="msg-input" id="msgInput" placeholder="Mesaj yaz..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+        <button class="send-btn" onclick="sendMsg()">↑</button>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const receiverId = {{ other.id }};
+const msgArea = document.getElementById('msgArea');
+msgArea.scrollTop = msgArea.scrollHeight;
+
+async function sendMsg() {
+    const inp = document.getElementById('msgInput');
+    const content = inp.value.trim();
+    if (!content) return;
+    const res = await fetch('/messages/send', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({receiver_id: receiverId, content})
+    });
+    if (res.ok) {
+        inp.value = '';
+        const div = document.createElement('div');
+        div.className = 'msg-bubble mine';
+        div.innerHTML = `<div><div class="bubble-content">${content}</div><div class="msg-time">şimdi</div></div>`;
+        msgArea.appendChild(div);
+        msgArea.scrollTop = msgArea.scrollHeight;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Sterk — Gerçek bağlantılar, güçlü topluluklar. Hesabını oluştur veya giriş yap.">
+<title>{% if mode=='register' %}Üye Ol{% else %}Giriş Yap{% endif %} — Sterk</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='900'>S</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#04040d;color:#e2e8f0;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.12;pointer-events:none;}
+.orb1{width:400px;height:400px;background:#6366f1;top:-100px;left:-100px;}
+.orb2{width:350px;height:350px;background:#ec4899;bottom:-80px;right:-80px;}
+.wrap{position:relative;z-index:1;width:100%;max-width:490px;}
+.logo{text-align:center;margin-bottom:1.5rem;}
+.logo-icon{width:52px;height:52px;background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;font-size:1.5rem;color:white;margin-bottom:0.5rem;box-shadow:0 8px 24px rgba(99,102,241,0.4);}
+.logo h1{font-family:'Syne',sans-serif;font-weight:900;font-size:1.5rem;background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo p{color:#64748b;font-size:0.8rem;margin-top:0.2rem;}
+.card{background:rgba(10,10,24,0.9);border:1px solid rgba(255,255,255,0.07);border-radius:22px;padding:1.8rem;backdrop-filter:blur(20px);}
+.tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:11px;padding:3px;margin-bottom:1.4rem;}
+.tab{flex:1;text-align:center;padding:0.45rem;border-radius:8px;cursor:pointer;font-size:0.83rem;color:#64748b;transition:all 0.2s;}
+.tab.active{background:rgba(99,102,241,0.2);color:#a5b4fc;font-weight:600;}
+/* WARNING */
+.warn-box{background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.28);border-radius:12px;padding:0.9rem 1rem;margin-bottom:1.2rem;}
+.warn-box .wt{display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;font-weight:700;color:#f59e0b;margin-bottom:0.5rem;}
+.warn-box li{list-style:none;font-size:0.73rem;color:#94a3b8;padding:0.15rem 0 0.15rem 0.8rem;position:relative;line-height:1.45;}
+.warn-box li::before{content:'›';position:absolute;left:0;color:#f59e0b;}
+.info-box{background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);border-radius:10px;padding:0.65rem 0.85rem;font-size:0.74rem;color:#94a3b8;margin-bottom:0.9rem;line-height:1.6;}
+.field{margin-bottom:0.8rem;}
+.field label{display:flex;align-items:center;gap:0.25rem;font-size:0.74rem;color:#94a3b8;margin-bottom:0.3rem;font-weight:500;}
+.req{color:#ef4444;}
+.input{width:100%;padding:0.6rem 0.82rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;color:#e2e8f0;font-family:'DM Sans',sans-serif;font-size:0.87rem;outline:none;transition:border-color 0.2s;}
+.input:focus{border-color:#6366f1;background:rgba(99,102,241,0.04);}
+.input::placeholder{color:#374151;}
+select.input option{background:#0f0f1e;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;}
+.pw-bar-wrap{height:3px;background:#1a1a2e;border-radius:2px;margin-top:0.3rem;}
+.pw-bar{height:100%;border-radius:2px;transition:width 0.3s,background 0.3s;width:0;}
+.pw-hint{font-size:0.67rem;color:#64748b;margin-top:0.2rem;}
+.err{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:9px;padding:0.6rem 0.85rem;font-size:0.78rem;color:#fca5a5;margin-bottom:0.9rem;display:none;}
+.btn{width:100%;padding:0.72rem;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:11px;color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:0.93rem;cursor:pointer;transition:all 0.2s;margin-top:0.3rem;}
+.btn:hover:not(:disabled){opacity:0.87;transform:translateY(-1px);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.note{text-align:center;font-size:0.78rem;color:#4a5568;margin-top:0.8rem;}
+.note a{color:#a5b4fc;}
+@media(max-width:460px){.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-icon">S</div>
+    <h1>sterk</h1>
+    <p>{% if mode=='register' %}Topluluğa katıl{% else %}Hesabına giriş yap{% endif %}</p>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab {% if mode=='login' %}active{% endif %}" onclick="location.href='/login'">Giriş Yap</div>
+      <div class="tab {% if mode=='register' %}active{% endif %}" onclick="location.href='/register'">Üye Ol</div>
+    </div>
+    <div id="err" class="err"></div>
+
+    {% if mode == 'register' %}
+    <div class="warn-box">
+      <div class="wt">⚠️ Kayıt olmadan önce lütfen oku!</div>
+      <ul>
+        <li>Girdiğin <strong>ad soyad, yaş ve cinsiyet</strong> bilgilerin gerçek olması zorunludur.</li>
+        <li>Seçeceğin <strong>meslek/alan kategorisi</strong> çok önemli — sadece o kategoride paylaşım yapabilirsin.</li>
+        <li>Kategori seçimini yaptıktan sonra <strong>{{ change_days }} gün</strong> boyunca değiştiremezsin.</li>
+        <li>Yanıltıcı bilgi içeren hesaplar <strong>kalıcı olarak kapatılır</strong>.</li>
+      </ul>
+    </div>
+    <form id="registerForm" onsubmit="event.preventDefault();doReg()" autocomplete="on">
+    <div class="grid2">
+      <div class="field"><label>Ad Soyad <span class="req">*</span></label><input id="fn" name="full_name" class="input" placeholder="Gerçek adın" autocomplete="name"></div>
+      <div class="field"><label>Kullanıcı Adı <span class="req">*</span></label><input id="un" name="username" class="input" placeholder="sterk_adi" autocomplete="username"></div>
+    </div>
+    <div class="field"><label>E-posta <span class="req">*</span></label><input id="em" name="email" class="input" type="email" placeholder="email@ornek.com" autocomplete="email"></div>
+    <div class="grid2">
+      <div class="field"><label>Yaş <span class="req">*</span> <span style="color:#64748b;font-size:0.68rem">(min. 13)</span></label><input id="age" name="age" class="input" type="number" min="13" max="100" placeholder="Gerçek yaşın"></div>
+      <div class="field"><label>Cinsiyet <span class="req">*</span></label>
+        <select id="gender" name="gender" class="input"><option value="">— Seç —</option><option>Erkek</option><option>Kadın</option><option>Diğer</option><option value="Belirtmek İstemiyorum">Belirtmek İstemiyorum</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Şifre <span class="req">*</span></label>
+      <input id="pw" name="password" class="input" type="password" placeholder="En az 8 karakter" autocomplete="new-password" oninput="checkPw(this.value)">
+      <div class="pw-bar-wrap"><div class="pw-bar" id="pwb"></div></div>
+      <div class="pw-hint" id="pwh">En az 8 karakter, harf + rakam karışık olsun</div>
+    </div>
+    <div class="info-box">📋 Kayıttan sonra <strong style="color:#a5b4fc">meslek/alan kategorini</strong> seçmen istenecek. Bu seçim çok önemli ve <strong style="color:#a5b4fc">{{ change_days }} gün</strong> boyunca değiştirilemez. Gerçek mesleğini seç!</div>
+    <label style="display:flex;align-items:flex-start;gap:0.6rem;margin-bottom:0.9rem;cursor:pointer">
+      <input type="checkbox" id="terms" style="margin-top:3px;accent-color:#6366f1;flex-shrink:0">
+      <span style="font-size:0.73rem;color:#64748b;line-height:1.5">Girdiğim bilgilerin <strong style="color:#a5b4fc">gerçek ve doğru</strong> olduğunu, yanlış bilgi girişinin hesabımın askıya alınmasına yol açabileceğini anlıyorum ve onaylıyorum.</span>
+    </label>
+    <button class="btn" id="submitBtn" type="submit">Üye Ol → Kategorini Seç</button>
+    <p class="note">Zaten hesabın var mı? <a href="/login">Giriş yap</a></p>
+    </form>
+
+    {% else %}
+    <form id="loginForm" onsubmit="event.preventDefault();doLogin()" autocomplete="on">
+    <div class="field"><label>Kullanıcı Adı veya E-posta</label><input id="lu" name="username" class="input" placeholder="kullanici veya email@ornek.com" autocomplete="username"></div>
+    <div class="field"><label>Şifre</label><input id="lp" name="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn" id="loginBtn" type="submit">Giriş Yap →</button>
+    <p class="note">Hesabın yok mu? <a href="/register">Ücretsiz üye ol</a></p>
+    </form>
+    {% endif %}
+  </div>
+</div>
+<script>
+function showErr(m){const e=document.getElementById('err');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',5000);}
+function checkPw(pw){const b=document.getElementById('pwb'),h=document.getElementById('pwh');let s=0;if(pw.length>=8)s++;if(pw.length>=12)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;const ws=[0,20,40,65,85,100],cs=['','#ef4444','#f59e0b','#f59e0b','#10b981','#10b981'],ls=['','Çok zayıf','Zayıf','Orta','İyi ✓','Güçlü ✓'];b.style.width=ws[s]+'%';b.style.background=cs[s]||'transparent';h.textContent=ls[s]||'En az 8 karakter';h.style.color=cs[s]||'#64748b';}
+async function doLogin(){const btn=document.getElementById('loginBtn');if(!btn)return;btn.disabled=true;btn.textContent='Giriş yapılıyor...';try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('lu').value,password:document.getElementById('lp').value})});const d=await r.json();if(d.success)location.href=d.redirect;else{showErr(d.error);btn.disabled=false;btn.textContent='Giriş Yap →';}}catch(e){showErr('Sunucu bağlantı hatası');btn.disabled=false;btn.textContent='Giriş Yap →';}}
+async function doReg(){
+  if(!document.getElementById('terms').checked){showErr('Lütfen bilgilerin doğruluğunu onaylayan kutuyu işaretle');return;}
+  const pw=document.getElementById('pw').value;if(pw.length<8){showErr('Şifre en az 8 karakter olmalı');return;}
+  const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Hesap oluşturuluyor...';
+  try{
+    const r=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('un').value,email:document.getElementById('em').value,password:pw,full_name:document.getElementById('fn').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value})});
+    const d=await r.json();if(d.success)location.href=d.redirect;else{showErr(d.error);btn.disabled=false;btn.textContent='Üye Ol → Kategorini Seç';}
+  }catch(e){showErr('Sunucu bağlantı hatası');btn.disabled=false;btn.textContent='Üye Ol → Kategorini Seç';}
+}
+</script>
+</body></html>

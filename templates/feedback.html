@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Geri Bildirim — Sterk{% endblock %}
+{% block extra_style %}
+.fb-wrap{max-width:800px;margin:0 auto;padding:2rem 1rem;}
+.fb-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem;margin-bottom:0.8rem;transition:border-color 0.2s;}
+.fb-card:hover{border-color:var(--border2);}
+.fb-type{display:inline-flex;align-items:center;gap:0.3rem;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.7rem;font-weight:600;}
+.fb-type.istek{background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2);}
+.fb-type.oneri{background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.2);}
+.fb-type.sikayet{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
+.fb-status{font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:10px;}
+.fb-status.open{background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.2);}
+.fb-status.replied{background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.2);}
+.fb-create{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1.5rem;}
+.fb-tabs{display:flex;gap:0.4rem;margin-bottom:1rem;}
+.fb-tab{flex:1;padding:0.6rem;border-radius:10px;text-align:center;cursor:pointer;font-size:0.82rem;font-weight:600;transition:all 0.2s;border:1px solid var(--border);background:var(--surface);color:var(--text2);}
+.fb-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,0.08);}
+[data-theme="ocean"] .fb-tab.active{background:rgba(8,145,178,0.08);}
+.fb-tab:hover{border-color:var(--accent);}
+{% endblock %}
+{% block content %}
+<div class="fb-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <h1 style="font-size:1.4rem">📬 Geri Bildirim</h1>
+  </div>
+
+  <div class="fb-create">
+    <h3 style="font-size:1rem;margin-bottom:1rem">Yeni Geri Bildirim Gönder</h3>
+    <div class="fb-tabs" id="fbTabs">
+      <div class="fb-tab active" onclick="selectFbType('istek',this)" data-type="istek">📩 İstek</div>
+      <div class="fb-tab" onclick="selectFbType('oneri',this)" data-type="oneri">💡 Öneri</div>
+      <div class="fb-tab" onclick="selectFbType('sikayet',this)" data-type="sikayet">🔴 Şikayet</div>
+    </div>
+    <div class="field"><label>Konu</label><input id="fbSubject" class="input" placeholder="Konu başlığı (isteğe bağlı)"></div>
+    <div class="field"><label>Mesajınız <span style="color:var(--danger)">*</span></label><textarea id="fbContent" class="input" rows="4" placeholder="Detaylı olarak yazın..."></textarea></div>
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="submitFeedback()">Gönder ✦</button>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;margin-bottom:0.8rem;color:var(--text2)">Geçmiş Geri Bildirimleriniz</h3>
+  {% for fb in feedbacks %}
+  <div class="fb-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <span class="fb-type {{ fb.feedback_type }}">
+          {% if fb.feedback_type == 'istek' %}📩 İstek{% elif fb.feedback_type == 'oneri' %}💡 Öneri{% else %}🔴 Şikayet{% endif %}
+        </span>
+        {% if fb.subject %}<strong style="font-size:0.85rem">{{ fb.subject }}</strong>{% endif %}
+      </div>
+      <span class="fb-status {{ fb.status }}">{% if fb.status == 'replied' %}✓ Yanıtlandı{% else %}⏳ Bekliyor{% endif %}</span>
+    </div>
+    <p style="font-size:0.85rem;color:var(--text);line-height:1.5;margin-bottom:0.5rem">{{ fb.content }}</p>
+    {% if fb.admin_reply %}
+    <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:0.7rem;margin-top:0.5rem">
+      <div style="font-size:0.72rem;color:var(--success);font-weight:600;margin-bottom:0.3rem">🛡️ Yönetici Yanıtı</div>
+      <p style="font-size:0.83rem;color:var(--text)">{{ fb.admin_reply }}</p>
+    </div>
+    {% endif %}
+    <div style="font-size:0.68rem;color:var(--muted);margin-top:0.5rem">{{ time_ago(fb.created_at) }}</div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:3rem;color:var(--muted)">
+    <div style="font-size:3rem;margin-bottom:1rem">📬</div>
+    <p>Henüz geri bildirim göndermediniz.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let _fbType='istek';
+function selectFbType(type,el){
+  _fbType=type;
+  document.querySelectorAll('.fb-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+async function submitFeedback(){
+  const subject=document.getElementById('fbSubject').value.trim();
+  const content=document.getElementById('fbContent').value.trim();
+  if(!content){showToast('Mesaj alanı zorunlu','error');return;}
+  try{
+    const r=await fetch('/feedback/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:_fbType,subject,content})});
+    const d=await r.json();
+    if(d.success){
+      showToast('Geri bildiriminiz alındı! Teşekkürler.','success');
+      document.getElementById('fbSubject').value='';
+      document.getElementById('fbContent').value='';
+      setTimeout(()=>location.reload(),1000);
+    }else showToast(d.error||'Hata','error');
+  }catch(e){showToast('Bağlantı hatası','error');}
+}
+</script>
+{% endblock %}

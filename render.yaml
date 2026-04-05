@@ -1,0 +1,36 @@
+databases:
+  - name: sterk-db
+    plan: free
+    databaseName: sterk
+    user: sterk_user
+
+services:
+  - type: web
+    name: sterk
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sterk-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: FLASK_ENV
+        value: "production"
+      # Cloudinary — https://cloudinary.com adresinden ücretsiz hesap aç
+      - key: CLOUDINARY_URL
+        sync: false  # Render Dashboard'dan elle gir
+      # E-posta (Gmail App Password veya SMTP sağlayıcısı)
+      - key: SMTP_HOST
+        value: "smtp.gmail.com"
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false  # Render Dashboard'dan elle gir
+      - key: SMTP_PASS
+        sync: false  # Render Dashboard'dan elle gir

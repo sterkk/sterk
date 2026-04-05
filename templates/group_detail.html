@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ group.name }} — Sterk{% endblock %}
+{% block extra_style %}
+.gd-wrap{max-width:900px;margin:0 auto;padding:1.5rem 1rem;}
+.gd-layout{display:grid;grid-template-columns:1fr 280px;gap:1.2rem;}
+@media(max-width:700px){.gd-layout{grid-template-columns:1fr;}}
+{% endblock %}
+{% block content %}
+<div class="gd-wrap">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div style="width:56px;height:56px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:1.5rem">👥</div>
+        <div>
+          <h1 style="font-size:1.1rem">{{ group.name }}</h1>
+          <div style="font-size:0.8rem;color:var(--text2)">{{ group.description or '' }}</div>
+        </div>
+      </div>
+      <button class="btn {% if is_member %}btn-ghost{% else %}btn-primary{% endif %}" onclick="joinGroup({{ group.id }},this)">
+        {% if is_member %}✓ Üyesin{% else %}+ Katıl{% endif %}
+      </button>
+    </div>
+  </div>
+  <div class="gd-layout">
+    <div>
+      {% if is_member %}
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;margin-bottom:0.8rem">
+        <textarea id="gpContent" class="input" rows="2" placeholder="Gruba bir şeyler paylaş..."></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:0.5rem"><button class="btn btn-primary btn-sm" onclick="groupPost({{ group.id }})">Paylaş</button></div>
+      </div>
+      {% endif %}
+      {% for p in posts %}
+      <div class="post-card">
+        <div class="post-header">
+          <a href="/profile/{{ p.username }}"><div class="avatar av-sm" style="background:{{ p.avatar_color }}">{{ (p.full_name or p.username)[0].upper() }}</div></a>
+          <div class="post-meta">
+            <strong>@{{ p.username }}</strong>
+            <span>{{ time_ago(p.created_at) }}</span>
+          </div>
+        </div>
+        <div class="post-content">{{ p.content }}</div>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:3rem;color:var(--muted)">Henüz gönderi yok.</div>
+      {% endfor %}
+    </div>
+    <div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem">
+        <h4 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:0.8rem">Üyeler ({{ members|length }})</h4>
+        {% for m in members[:10] %}
+        <div style="display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0">
+          <a href="/profile/{{ m.username }}"><div class="avatar av-sm" style="background:{{ m.avatar_color }}">{{ (m.full_name or m.username)[0].upper() }}</div></a>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.full_name or m.username }}</div>
+            <div style="font-size:0.7rem;color:var(--muted)">{{ m.role }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function joinGroup(id,btn){const r=await fetch(`/groups/${id}/join`,{method:'POST'});const d=await r.json();btn.textContent=d.joined?'✓ Üyesin':'+ Katıl';btn.className=d.joined?'btn btn-ghost':'btn btn-primary';showToast(d.joined?'Katıldın!':'Ayrıldın','success');}
+async function groupPost(id){const c=document.getElementById('gpContent').value.trim();if(!c)return;const r=await fetch(`/groups/${id}/post`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:c})});if(r.ok){document.getElementById('gpContent').value='';showToast('Paylaşıldı!','success');setTimeout(()=>location.reload(),600);}}
+</script>
+{% endblock %}
