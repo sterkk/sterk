@@ -1,19 +1,34 @@
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.env
-.venv
-env/
-venv/
-ENV/
+*.pyc
+*.pyo
+*.pyd
 *.egg-info/
 dist/
 build/
-.idea/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables (HASSAS BİLGİLER)
+.env
+
+# IDE
 .vscode/
-*.db
-*.sqlite3
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Uploads (kullanıcı dosyaları)
 static/uploads/avatars/*
 static/uploads/posts/*
 static/uploads/covers/*
@@ -21,4 +36,7 @@ static/uploads/certificates/*
 static/uploads/shorts/*
 static/uploads/stories/*
 !static/uploads/.gitkeep
-check_db.py
+!static/uploads/*/.gitkeep
+
+# Logs
+*.log

@@ -52,6 +52,35 @@
             <a href="/logout" class="btn btn-danger btn-sm">Çıkış</a>
         </div>
     </div>
+    <div class="settings-section">
+        <h3>🔒 Şifre Değiştir</h3>
+        <div class="field"><label>Mevcut Şifre</label><input id="oldPw" type="password" class="input" placeholder="••••••••"></div>
+        <div class="field"><label>Yeni Şifre</label><input id="newPw" type="password" class="input" placeholder="En az 8 karakter"></div>
+        <div class="field"><label>Yeni Şifre (Tekrar)</label><input id="newPw2" type="password" class="input" placeholder="Tekrar girin"></div>
+        <button class="btn btn-primary btn-sm" onclick="changePassword()">Şifreyi Güncelle</button>
+    </div>
+    <div class="settings-section" style="border-color:rgba(239,68,68,0.3)">
+        <h3 style="color:var(--danger)">⚠️ Tehlikeli Bölge</h3>
+        <div class="setting-row" style="border:none">
+            <div class="setting-label"><strong style="color:var(--danger)">Hesabı Sil</strong><span>Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinir.</span></div>
+            <button class="btn btn-danger btn-sm" onclick="showDeleteConfirm()">🗑️ Hesabı Sil</button>
+        </div>
+        <div id="deleteConfirm" style="display:none;margin-top:0.8rem;padding:1rem;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px">
+            <p style="font-size:0.82rem;color:#fca5a5;margin-bottom:0.8rem">⚠️ Hesabınızı silmek üzeresiniz. Bu işlem:</p>
+            <ul style="font-size:0.78rem;color:#94a3b8;margin-bottom:1rem;padding-left:1.2rem">
+                <li>Tüm gönderileriniz silinecek</li>
+                <li>Takipçi/takip listeniz temizlenecek</li>
+                <li>Mesajlarınız silinecek</li>
+                <li>Bu işlem geri alınamaz!</li>
+            </ul>
+            <div class="field"><label style="color:#fca5a5">Onaylamak için şifrenizi girin</label>
+                <input id="deletePw" type="password" class="input" placeholder="Şifreniz" style="border-color:rgba(239,68,68,0.3)"></div>
+            <div style="display:flex;gap:0.5rem">
+                <button class="btn btn-danger btn-sm" onclick="confirmDeleteAccount()">Evet, Hesabımı Sil</button>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('deleteConfirm').style.display='none'">Vazgeç</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -62,6 +91,28 @@ async function toggleSetting(btn, key) {
     settings[key] = btn.classList.contains('on') ? 1 : 0;
     await fetch('/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(settings)});
     showToast('Ayar kaydedildi', 'success');
+}
+async function changePassword(){
+    const old=document.getElementById('oldPw').value;
+    const pw=document.getElementById('newPw').value;
+    const pw2=document.getElementById('newPw2').value;
+    if(!old){showToast('Mevcut şifre gerekli','error');return;}
+    if(pw.length<8){showToast('Yeni şifre en az 8 karakter','error');return;}
+    if(pw!==pw2){showToast('Şifreler eşleşmiyor','error');return;}
+    const r=await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'change_password',old_password:old,new_password:pw})});
+    const d=await r.json();
+    if(d.success){showToast('Şifre başarıyla değiştirildi!','success');document.getElementById('oldPw').value='';document.getElementById('newPw').value='';document.getElementById('newPw2').value='';}
+    else showToast(d.error||'Hata','error');
+}
+function showDeleteConfirm(){document.getElementById('deleteConfirm').style.display='block';}
+async function confirmDeleteAccount(){
+    const pw=document.getElementById('deletePw').value;
+    if(!pw){showToast('Şifre gerekli','error');return;}
+    if(!confirm('UYARI: Hesabınız kalıcı olarak silinecek. Emin misiniz?'))return;
+    const r=await fetch('/delete_account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+    const d=await r.json();
+    if(d.success){showToast(d.message,'success');setTimeout(()=>location.href=d.redirect||'/',1500);}
+    else showToast(d.error||'Hata','error');
 }
 </script>
 {% endblock %}

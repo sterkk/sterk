@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="description" content="Sterk — Gerçek bağlantılar, güçlü topluluklar. Hesabını oluştur veya giriş yap.">
-<title>{% if mode=='register' %}Üye Ol{% else %}Giriş Yap{% endif %} — Sterk</title>
+<title>{% if mode=='register' %}Üye Ol{% elif mode=='forgot' %}Şifremi Unuttum{% elif mode=='reset' %}Şifre Sıfırla{% else %}Giriş Yap{% endif %} — Sterk</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='900'>S</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -53,13 +53,15 @@ select.input option{background:#0f0f1e;}
   <div class="logo">
     <div class="logo-icon">S</div>
     <h1>sterk</h1>
-    <p>{% if mode=='register' %}Topluluğa katıl{% else %}Hesabına giriş yap{% endif %}</p>
+    <p>{% if mode=='register' %}Topluluğa katıl{% elif mode=='forgot' %}Şifreni sıfırla{% elif mode=='reset' %}Yeni şifre belirle{% else %}Hesabına giriş yap{% endif %}</p>
   </div>
   <div class="card">
+    {% if mode not in ['forgot','reset'] %}
     <div class="tabs">
       <div class="tab {% if mode=='login' %}active{% endif %}" onclick="location.href='/login'">Giriş Yap</div>
       <div class="tab {% if mode=='register' %}active{% endif %}" onclick="location.href='/register'">Üye Ol</div>
     </div>
+    {% endif %}
     <div id="err" class="err"></div>
 
     {% if mode == 'register' %}
@@ -104,8 +106,34 @@ select.input option{background:#0f0f1e;}
     <div class="field"><label>Kullanıcı Adı veya E-posta</label><input id="lu" name="username" class="input" placeholder="kullanici veya email@ornek.com" autocomplete="username"></div>
     <div class="field"><label>Şifre</label><input id="lp" name="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div>
     <button class="btn" id="loginBtn" type="submit">Giriş Yap →</button>
+    <p class="note"><a href="/forgot_password" style="color:#94a3b8">Şifremi unuttum</a></p>
     <p class="note">Hesabın yok mu? <a href="/register">Ücretsiz üye ol</a></p>
     </form>
+
+    {% elif mode == 'forgot' %}
+    <div class="info-box">🔐 E-posta adresini gir, şifre sıfırlama bağlantısı gönderelim.</div>
+    <form id="forgotForm" onsubmit="event.preventDefault();doForgot()" autocomplete="on">
+    <div class="field"><label>E-posta Adresi</label><input id="fe" name="email" class="input" type="email" placeholder="email@ornek.com" autocomplete="email"></div>
+    <button class="btn" id="forgotBtn" type="submit">Sıfırlama Bağlantısı Gönder</button>
+    <p class="note"><a href="/login">← Giriş sayfasına dön</a></p>
+    </form>
+
+    {% elif mode == 'reset' %}
+    <div class="info-box">🔑 Yeni şifrenizi belirleyin. En az 8 karakter olmalıdır.</div>
+    <form id="resetForm" onsubmit="event.preventDefault();doReset()" autocomplete="off">
+    <div class="field">
+      <label>Yeni Şifre <span class="req">*</span></label>
+      <input id="rp" name="password" class="input" type="password" placeholder="En az 8 karakter" autocomplete="new-password" oninput="checkPw(this.value)">
+      <div class="pw-bar-wrap"><div class="pw-bar" id="pwb"></div></div>
+      <div class="pw-hint" id="pwh">En az 8 karakter</div>
+    </div>
+    <div class="field"><label>Yeni Şifre (Tekrar) <span class="req">*</span></label>
+      <input id="rp2" name="password2" class="input" type="password" placeholder="Şifrenizi tekrar girin" autocomplete="new-password">
+    </div>
+    <button class="btn" id="resetBtn" type="submit">Şifremi Güncelle</button>
+    <p class="note"><a href="/login">← Giriş sayfasına dön</a></p>
+    </form>
+
     {% endif %}
   </div>
 </div>
@@ -121,6 +149,35 @@ async function doReg(){
     const r=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('un').value,email:document.getElementById('em').value,password:pw,full_name:document.getElementById('fn').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value})});
     const d=await r.json();if(d.success)location.href=d.redirect;else{showErr(d.error);btn.disabled=false;btn.textContent='Üye Ol → Kategorini Seç';}
   }catch(e){showErr('Sunucu bağlantı hatası');btn.disabled=false;btn.textContent='Üye Ol → Kategorini Seç';}
+}
+async function doForgot(){
+  const btn=document.getElementById('forgotBtn');if(!btn)return;
+  btn.disabled=true;btn.textContent='Gönderiliyor...';
+  try{
+    const r=await fetch('/forgot_password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('fe').value})});
+    const d=await r.json();
+    if(d.success){
+      document.getElementById('err').style.display='none';
+      btn.textContent='✓ Gönderildi!';btn.style.background='linear-gradient(135deg,#10b981,#059669)';
+      document.querySelector('.info-box').innerHTML='✅ '+d.message;document.querySelector('.info-box').style.borderColor='rgba(16,185,129,0.3)';
+    }else{showErr(d.error);btn.disabled=false;btn.textContent='Sıfırlama Bağlantısı Gönder';}
+  }catch(e){showErr('Sunucu bağlantı hatası');btn.disabled=false;btn.textContent='Sıfırlama Bağlantısı Gönder';}
+}
+async function doReset(){
+  const pw=document.getElementById('rp').value,pw2=document.getElementById('rp2').value;
+  if(pw.length<8){showErr('Şifre en az 8 karakter olmalı');return;}
+  if(pw!==pw2){showErr('Şifreler eşleşmiyor');return;}
+  const btn=document.getElementById('resetBtn');btn.disabled=true;btn.textContent='Güncelleniyor...';
+  try{
+    const token='{{ reset_token|default("") }}';
+    const r=await fetch('/reset_password/'+token,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,password2:pw2})});
+    const d=await r.json();
+    if(d.success){
+      btn.textContent='✓ Şifre Güncellendi!';btn.style.background='linear-gradient(135deg,#10b981,#059669)';
+      document.querySelector('.info-box').innerHTML='✅ '+d.message;
+      setTimeout(()=>location.href=d.redirect||'/login',2000);
+    }else{showErr(d.error);btn.disabled=false;btn.textContent='Şifremi Güncelle';}
+  }catch(e){showErr('Sunucu bağlantı hatası');btn.disabled=false;btn.textContent='Şifremi Güncelle';}
 }
 </script>
 </body></html>

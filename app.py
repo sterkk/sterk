@@ -311,6 +311,31 @@ def send_verification_email(email, token):
     """
     return send_email(email, 'Sterk — E-posta Doğrulama', html)
 
+def send_reset_email(email, token):
+    """Şifre sıfırlama e-postası gönder."""
+    base_url = os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:5000')
+    link = f"{base_url}/reset_password/{token}"
+    html = f"""
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:500px;margin:0 auto;background:#0f0f1e;color:#e2e8f0;border-radius:16px;overflow:hidden;border:1px solid #1e293b">
+      <div style="background:linear-gradient(135deg,#7c3aed,#6366f1);padding:24px;text-align:center">
+        <h1 style="margin:0;font-size:24px;color:white">Sterk</h1>
+        <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.8)">Profesyonel Sosyal Ağ</p>
+      </div>
+      <div style="padding:28px 24px">
+        <h2 style="font-size:18px;margin:0 0 12px">Şifre Sıfırlama</h2>
+        <p style="color:#94a3b8;font-size:14px;line-height:1.6">Şifrenizi sıfırlamak için aşağıdaki butona tıklayın. Bu bağlantı 1 saat geçerlidir.</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="{link}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6366f1);color:white;padding:12px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">🔐 Şifremi Sıfırla</a>
+        </div>
+        <p style="color:#64748b;font-size:12px">Bu isteği siz yapmadıysanız bu e-postayı görmezden gelin.<br>
+          <a href="{link}" style="color:#7c3aed;word-break:break-all">{link}</a>
+        </p>
+      </div>
+      <div style="background:#1a1a2e;padding:14px 24px;text-align:center;font-size:11px;color:#475569">© 2026 Sterk — Şifre sıfırlama talebi.</div>
+    </div>
+    """
+    return send_email(email, 'Sterk — Şifre Sıfırlama', html)
+
 def save_tags(pid, text, c):
     for t in re.findall(r'#(\w+)',text or ''):
         tl=t.lower()
@@ -633,6 +658,12 @@ CREATE TABLE IF NOT EXISTS email_verifications(
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   token VARCHAR(100), created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS password_resets(
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(100) UNIQUE, used BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 CREATE TABLE IF NOT EXISTS feedback(
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -835,6 +866,63 @@ def login():
             return jsonify({'error':f'Giriş hatası: {str(e)[:100]}'}),500
         finally: release_db(c)
     return render_template('auth.html',mode='login')
+
+# ── ŞİFRE SIFIRLAMA ──────────────────────────────────────────
+@app.route('/forgot_password', methods=['GET','POST'])
+def forgot_password():
+    if request.method=='POST':
+        d = request.get_json(silent=True) or request.form
+        email = (d.get('email') or '').strip().lower()
+        if not email or '@' not in email:
+            return jsonify({'error':'Geçerli bir e-posta adresi girin'}),400
+        c=get_db()
+        try:
+            u=run(c,'SELECT id,email FROM users WHERE LOWER(email)=%s',(email,),one=True)
+            if u:
+                tok=gen_token()
+                # Eski tokenları sil
+                run(c,'DELETE FROM password_resets WHERE user_id=%s',(u['id'],))
+                run(c,'INSERT INTO password_resets(user_id,token) VALUES(%s,%s)',(u['id'],tok))
+                c.commit()
+                threading.Thread(target=send_reset_email, args=(u['email'],tok), daemon=True).start()
+            # Güvenlik: Kullanıcı var/yok fark etmeksizin aynı mesajı göster
+            return jsonify({'success':True,'message':'Eğer bu e-posta adresine kayıtlı bir hesap varsa, şifre sıfırlama bağlantısı gönderildi.'})
+        except Exception as e:
+            c.rollback()
+            return jsonify({'error':f'Hata: {str(e)[:100]}'}),500
+        finally: release_db(c)
+    return render_template('auth.html',mode='forgot')
+
+@app.route('/reset_password/<token>', methods=['GET','POST'])
+def reset_password(token):
+    c=get_db()
+    try:
+        row=run(c,"SELECT * FROM password_resets WHERE token=%s AND used=false",(token,),one=True)
+        if not row:
+            return render_template('verify_result.html',success=False,msg='Geçersiz veya kullanılmış sıfırlama bağlantısı.')
+        # 1 saatlik süre kontrolü
+        created = row['created_at']
+        if isinstance(created,str): created = datetime.strptime(created[:19],'%Y-%m-%d %H:%M:%S')
+        elif hasattr(created,'tzinfo') and created.tzinfo: created = created.replace(tzinfo=None)
+        if (datetime.now() - created).total_seconds() > 3600:
+            return render_template('verify_result.html',success=False,msg='Sıfırlama bağlantısının süresi dolmuş. Lütfen yeni bir talep oluşturun.')
+        if request.method=='POST':
+            d = request.get_json(silent=True) or request.form
+            pw = d.get('password','')
+            pw2 = d.get('password2','')
+            if len(pw)<8:
+                return jsonify({'error':'Şifre en az 8 karakter olmalı'}),400
+            if pw != pw2:
+                return jsonify({'error':'Şifreler eşleşmiyor'}),400
+            run(c,'UPDATE users SET password_hash=%s WHERE id=%s',(hash_pw(pw),row['user_id']))
+            run(c,'UPDATE password_resets SET used=true WHERE id=%s',(row['id'],))
+            c.commit()
+            return jsonify({'success':True,'message':'Şifreniz başarıyla güncellendi! Giriş yapabilirsiniz.','redirect':'/login'})
+        return render_template('auth.html',mode='reset',reset_token=token)
+    except Exception as e:
+        c.rollback()
+        return render_template('verify_result.html',success=False,msg=f'Hata: {str(e)[:100]}')
+    finally: release_db(c)
 
 @app.route('/logout')
 def logout():
@@ -1850,6 +1938,27 @@ def settings():
     try:
         s=run(c,'SELECT * FROM user_settings WHERE user_id=%s',(uid,),one=True)
         return render_template('settings.html',user=get_user(uid),settings=s)
+    finally: release_db(c)
+
+@app.route('/delete_account', methods=['POST'])
+def delete_account():
+    if 'user_id' not in session: return jsonify({'error':'Giriş gerekli'}),401
+    uid=session['user_id']
+    d=request.get_json(silent=True) or {}
+    pw=d.get('password','')
+    if not pw: return jsonify({'error':'Şifre gerekli'}),400
+    c=get_db()
+    try:
+        u=run(c,'SELECT * FROM users WHERE id=%s',(uid,),one=True)
+        if not u or not verify_pw(pw, u.get('password_hash','')):
+            return jsonify({'error':'Şifre yanlış'}),400
+        run(c,'DELETE FROM users WHERE id=%s',(uid,))
+        c.commit()
+        session.clear()
+        return jsonify({'success':True,'message':'Hesabınız kalıcı olarak silindi.','redirect':'/'})
+    except Exception as e:
+        c.rollback()
+        return jsonify({'error':f'Hesap silme hatası: {str(e)[:100]}'}),500
     finally: release_db(c)
 
 @app.route('/followers/<username>')

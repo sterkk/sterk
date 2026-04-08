@@ -1,10 +1,75 @@
-{% extends "base.html" %}
-{% block title %}Sayfa Bulunamadı{% endblock %}
-{% block content %}
-<div style="text-align:center;padding:6rem 2rem;color:var(--muted)">
-    <div style="font-size:5rem;margin-bottom:1rem">◈</div>
-    <h1 style="font-size:2rem;margin-bottom:0.5rem">404</h1>
-    <p style="margin-bottom:2rem">Aradığın sayfa bulunamadı.</p>
-    <a href="/feed" class="btn btn-primary">Ana Sayfaya Dön</a>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sayfa Bulunamadı — Sterk</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c3aed'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='900'>S</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#04040d;color:#e2e8f0;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.container{text-align:center;position:relative;z-index:1;padding:2rem;}
+
+/* Floating particles */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.p{position:absolute;border-radius:50%;opacity:0.12;animation:float linear infinite;}
+@keyframes float{0%{transform:translateY(100vh) scale(0);opacity:0;}10%{opacity:0.12;}90%{opacity:0.12;}100%{transform:translateY(-20vh) scale(1);opacity:0;}}
+
+/* Glitch 404 */
+.code{font-family:'Syne',sans-serif;font-weight:900;font-size:clamp(8rem,20vw,14rem);line-height:1;letter-spacing:-0.03em;position:relative;margin-bottom:1rem;}
+.code span{background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7,#c084fc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.code::before,.code::after{content:'404';position:absolute;top:0;left:0;right:0;overflow:hidden;-webkit-text-fill-color:transparent;background:linear-gradient(135deg,#7c3aed,#a855f7);-webkit-background-clip:text;background-clip:text;}
+.code::before{animation:glitch1 2.5s infinite;clip-path:polygon(0 0,100% 0,100% 45%,0 45%);}
+.code::after{animation:glitch2 2.5s infinite 0.15s;clip-path:polygon(0 55%,100% 55%,100% 100%,0 100%);}
+@keyframes glitch1{0%,90%,100%{transform:translateX(0)}92%{transform:translateX(8px)}94%{transform:translateX(-5px)}96%{transform:translateX(12px)}98%{transform:translateX(-3px)}}
+@keyframes glitch2{0%,90%,100%{transform:translateX(0)}91%{transform:translateX(-10px)}93%{transform:translateX(6px)}95%{transform:translateX(-8px)}97%{transform:translateX(4px)}}
+
+.subtitle{font-family:'Syne',sans-serif;font-weight:700;font-size:1.3rem;margin-bottom:0.6rem;color:#e2e8f0;}
+.desc{color:#64748b;font-size:0.92rem;max-width:400px;margin:0 auto 2rem;line-height:1.7;}
+.btns{display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;}
+.btn{padding:0.7rem 1.8rem;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;}
+.btn-p{background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);color:white;border:none;box-shadow:0 6px 20px rgba(124,58,237,0.4);}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,0.55);}
+.btn-g{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#d1d5db;}
+.btn-g:hover{border-color:rgba(124,58,237,0.4);color:#c084fc;}
+
+/* Glow orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(100px);opacity:0.12;pointer-events:none;animation:orbPulse 4s ease-in-out infinite alternate;}
+.orb1{width:400px;height:400px;background:#7c3aed;top:-150px;left:-100px;}
+.orb2{width:300px;height:300px;background:#ec4899;bottom:-100px;right:-80px;animation-delay:1s;}
+.orb3{width:200px;height:200px;background:#06b6d4;top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:2s;}
+@keyframes orbPulse{0%{opacity:0.08;transform:scale(1);}100%{opacity:0.18;transform:scale(1.15);}}
+
+.logo{margin-bottom:2rem;}
+.logo a{display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7);border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;font-size:1.1rem;color:white;box-shadow:0 4px 14px rgba(124,58,237,0.4);}
+.logo-text{font-family:'Syne',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:0.08em;background:linear-gradient(135deg,#c084fc,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="particles" id="particles"></div>
+<div class="container">
+  <div class="logo"><a href="/"><div class="logo-icon">S</div><span class="logo-text">STERK</span></a></div>
+  <div class="code"><span>404</span></div>
+  <h2 class="subtitle">Sayfa Bulunamadı</h2>
+  <p class="desc">Aradığın sayfa taşınmış, silinmiş veya hiç var olmamış olabilir. Ama endişelenme, seni tekrar yoluna koyalım!</p>
+  <div class="btns">
+    <a href="/feed" class="btn btn-p">🏠 Ana Sayfaya Dön</a>
+    <a href="/explore" class="btn btn-g">🔭 Keşfet</a>
+  </div>
 </div>
-{% endblock %}
+<script>
+// Particles
+const pc=document.getElementById('particles');
+const colors=['124,58,237','168,85,247','192,132,252','99,102,241','236,72,153'];
+for(let i=0;i<25;i++){
+  const p=document.createElement('div');p.className='p';
+  const s=Math.random()*4+1;
+  p.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;background:rgba(${colors[Math.floor(Math.random()*colors.length)]},0.6);animation-duration:${Math.random()*8+6}s;animation-delay:${Math.random()*5}s;`;
+  pc.appendChild(p);
+}
+</script>
+</body></html>
