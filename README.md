@@ -1,0 +1,2 @@
+# sterk
+Sterk Sosyal Ağ
