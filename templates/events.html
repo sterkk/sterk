@@ -66,10 +66,15 @@ async function createEvent(){
   if(!edate){showToast('Tarih zorunlu','error');return;}
   try{
     const r=await fetch('/events/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,description:document.getElementById('eDesc').value,location:document.getElementById('eLoc').value,event_date:edate,event_time:document.getElementById('eTime').value})});
+    if(!r.ok){
+      const d=await r.json().catch(()=>({error:'Sunucu hatası: '+r.status}));
+      showToast(d.error||'Etkinlik oluşturulamadı','error');
+      return;
+    }
     const d=await r.json();
-    if(r.ok&&d.success){closeModal('createEventModal');showToast('Etkinlik oluşturuldu!','success');setTimeout(()=>location.reload(),700);}
+    if(d.success){closeModal('createEventModal');showToast('Etkinlik oluşturuldu!','success');setTimeout(()=>location.reload(),700);}
     else{showToast(d.error||'Etkinlik oluşturulamadı','error');}
-  }catch(e){showToast('Bağlantı hatası','error');}
+  }catch(e){showToast('Bağlantı hatası: '+e.message,'error');}
 }
 </script>
 {% endblock %}

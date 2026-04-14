@@ -135,12 +135,18 @@ async function startLive(){
   try{
     const r=await fetch('/live/start',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({title,description:document.getElementById('liveDesc').value})});
+    if(!r.ok){
+      const errText=await r.text();
+      showToast('Sunucu hatası: '+r.status,'error');
+      btn.disabled=false;btn.innerHTML='🔴 Canlı Yayın Başlat';
+      return;
+    }
     const d=await r.json();
     if(d.success){
-      showToast('Yayın başlatıldı!','success');
+      showToast('Yayın başlatıldı! Yönlendiriliyorsunuz...','success');
       setTimeout(()=>location.href='/live/'+d.stream_id,600);
-    }else{showToast(d.error||'Hata','error');btn.disabled=false;btn.innerHTML='🔴 Canlı Yayın Başlat';}
-  }catch(e){showToast('Bağlantı hatası','error');btn.disabled=false;btn.innerHTML='🔴 Canlı Yayın Başlat';}
+    }else{showToast(d.error||'Yayın başlatılamadı','error');btn.disabled=false;btn.innerHTML='🔴 Canlı Yayın Başlat';}
+  }catch(e){showToast('Bağlantı hatası: '+e.message,'error');btn.disabled=false;btn.innerHTML='🔴 Canlı Yayın Başlat';}
 }
 </script>
 {% endblock %}

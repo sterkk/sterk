@@ -65,7 +65,7 @@ else:
     limiter = None
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)),'static','uploads')
-ALLOWED_EXT   = {'png','jpg','jpeg','gif','webp','mp4','mov','pdf'}
+ALLOWED_EXT   = {'png','jpg','jpeg','gif','webp','mp4','mov','pdf','webm','ogg','wav','mp3'}
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024   # 64 MB
 
 # E-posta konfigürasyonu (SMTP)
@@ -545,7 +545,7 @@ CREATE TABLE IF NOT EXISTS messages(
   id SERIAL PRIMARY KEY,
   sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  content TEXT, media_url VARCHAR(500),
+  content TEXT, media_url VARCHAR(500), media_type VARCHAR(20),
   is_read BOOLEAN DEFAULT false, is_deleted BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -700,6 +700,11 @@ def init_db():
         # password_hash sütunu bcrypt için genişlet (mevcut DB'ler için)
         try:
             c.cursor().execute("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255)")
+        except Exception:
+            pass
+        # messages tablosuna media_type sütunu ekle (sesli mesaj desteği)
+        try:
+            c.cursor().execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS media_type VARCHAR(20)")
         except Exception:
             pass
         c.commit()
@@ -1605,14 +1610,36 @@ def conversation(username):
 @app.route('/messages/send', methods=['POST'])
 def send_msg():
     if 'user_id' not in session: return jsonify({'error':'Giriş gerekli'}),401
-    d=request.get_json(silent=True) or {}; uid=session['user_id']
-    rid=d.get('receiver_id'); txt=(d.get('content') or '').strip()
-    if not txt: return jsonify({'error':'Mesaj boş olamaz'}),400
+    uid=session['user_id']
+    media_path=None; media_type=None
+
+    # FormData (sesli mesaj veya dosyalı mesaj)
+    if request.content_type and 'multipart' in request.content_type:
+        rid=request.form.get('receiver_id')
+        txt=(request.form.get('content') or '').strip()
+        if 'file' in request.files:
+            f=request.files['file']
+            if f and f.filename and ok_file(f.filename):
+                path,ext=save_file(f,'voice')
+                media_path=path
+                if ext in ('ogg','wav','mp3','webm'):
+                    media_type='voice'
+                elif ext in ('mp4','mov'):
+                    media_type='video'
+                else:
+                    media_type='image'
+    else:
+        d=request.get_json(silent=True) or {}
+        rid=d.get('receiver_id'); txt=(d.get('content') or '').strip()
+
+    if not txt and not media_path: return jsonify({'error':'Mesaj boş olamaz'}),400
     c=get_db()
     try:
-        run(c,'INSERT INTO messages(sender_id,receiver_id,content) VALUES(%s,%s,%s)',(uid,rid,txt))
+        run(c,'INSERT INTO messages(sender_id,receiver_id,content,media_url,media_type) VALUES(%s,%s,%s,%s,%s)',
+            (uid,rid,txt or None,media_path,media_type))
         notif(rid,uid,'message')
-        c.commit(); return jsonify({'success':True})
+        c.commit()
+        return jsonify({'success':True,'media_url':media_url(media_path) if media_path else None,'media_type':media_type})
     finally: release_db(c)
 
 # ── NOTIFICATIONS ────────────────────────────────────────────

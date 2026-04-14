@@ -287,8 +287,8 @@
     </div>
     <textarea id="storyText" placeholder="Hikayeni yaz..." maxlength="200" oninput="document.getElementById('storyPreviewText').textContent=this.value||'Merhaba! 👋'" style="width:100%;padding:0.6rem 0.8rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;resize:none;height:70px;margin-bottom:0.8rem;"></textarea>
     <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:0.8rem;font-size:0.82rem;color:var(--text2);">
-      📷 Fotoğraf ekle (isteğe bağlı)
-      <input type="file" id="storyFile" accept="image/*" style="display:none" onchange="previewStoryFile(this)">
+      📷 Fotoğraf / Video ekle (isteğe bağlı)
+      <input type="file" id="storyFile" accept="image/*,video/*" style="display:none" onchange="previewStoryFile(this)">
     </label>
     <div id="storyFilePreview" style="display:none;margin-bottom:0.8rem;"></div>
     <button onclick="submitStory()" style="width:100%;padding:0.6rem;background:var(--grad);color:white;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-weight:800;font-size:0.9rem;cursor:pointer;">✨ Hikayeyi Paylaş</button>

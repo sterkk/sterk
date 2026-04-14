@@ -101,7 +101,7 @@ select.input option{background:#0f0f1e;}
     <p class="note">Zaten hesabın var mı? <a href="/login">Giriş yap</a></p>
     </form>
 
-    {% else %}
+    {% elif mode == 'login' %}
     <form id="loginForm" onsubmit="event.preventDefault();doLogin()" autocomplete="on">
     <div class="field"><label>Kullanıcı Adı veya E-posta</label><input id="lu" name="username" class="input" placeholder="kullanici veya email@ornek.com" autocomplete="username"></div>
     <div class="field"><label>Şifre</label><input id="lp" name="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div>

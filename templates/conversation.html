@@ -12,11 +12,34 @@
 .msg-bubble:not(.mine) .bubble-content{background:var(--card);border:1px solid var(--border);}
 .msg-bubble.mine .bubble-content{background:var(--grad);color:white;}
 .msg-time{font-size:0.65rem;color:var(--muted);margin-top:0.2rem;align-self:flex-end;}
-.msg-input-row{display:flex;gap:0.6rem;padding:0.8rem 0 0;border-top:1px solid var(--border);margin-top:0.8rem;}
+.msg-input-row{display:flex;gap:0.6rem;padding:0.8rem 0 0;border-top:1px solid var(--border);margin-top:0.8rem;align-items:flex-end;}
 .msg-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;padding:0.7rem 1rem;outline:none;resize:none;min-height:44px;}
 .msg-input:focus{border-color:var(--accent);}
-.send-btn{padding:0.7rem 1.2rem;background:var(--gradient);color:white;border:none;border-radius:12px;cursor:pointer;font-size:1rem;transition:opacity 0.2s;}
+.send-btn{padding:0.7rem 1.2rem;background:var(--grad);color:white;border:none;border-radius:12px;cursor:pointer;font-size:1rem;transition:opacity 0.2s;flex-shrink:0;}
 .send-btn:hover{opacity:0.85;}
+/* Voice recording */
+.voice-btn{width:44px;height:44px;border-radius:50%;background:none;border:1px solid var(--border);color:var(--text2);font-size:1.1rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.voice-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,0.06);}
+.voice-btn.recording{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.5);color:#ef4444;animation:voicePulse 1s ease-in-out infinite;}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4);}50%{box-shadow:0 0 0 10px rgba(239,68,68,0);}}
+.recording-bar{display:none;flex:1;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:0.5rem 0.8rem;align-items:center;gap:0.6rem;}
+.recording-bar.active{display:flex;}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;animation:recBlink 1s infinite;}
+@keyframes recBlink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.rec-timer{font-size:0.82rem;color:#ef4444;font-weight:600;font-family:'DM Sans',sans-serif;min-width:36px;}
+.rec-cancel{background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.82rem;margin-left:auto;padding:0.2rem 0.5rem;border-radius:6px;transition:all 0.15s;}
+.rec-cancel:hover{background:rgba(239,68,68,0.1);color:#ef4444;}
+/* Voice player in bubbles */
+.voice-player{display:flex;align-items:center;gap:0.5rem;min-width:180px;}
+.voice-play-btn{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;}
+.msg-bubble:not(.mine) .voice-play-btn{background:rgba(124,58,237,0.15);color:var(--accent);}
+.msg-bubble.mine .voice-play-btn{background:rgba(255,255,255,0.2);color:white;}
+.voice-play-btn:hover{transform:scale(1.1);}
+.voice-wave{flex:1;height:28px;display:flex;align-items:center;gap:1.5px;}
+.voice-wave-bar{width:3px;border-radius:2px;transition:height 0.15s;}
+.msg-bubble:not(.mine) .voice-wave-bar{background:var(--accent);}
+.msg-bubble.mine .voice-wave-bar{background:rgba(255,255,255,0.6);}
+.voice-dur{font-size:0.7rem;min-width:30px;text-align:right;opacity:0.7;}
 {% endblock %}
 {% block content %}
 <div class="conv-wrap">
@@ -37,7 +60,20 @@
             <div class="avatar av-sm" style="background:{{ m.avatar_color }};border-radius:50%">{% if m.avatar %}<img src="{{ media_url(m.avatar) }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">{% else %}{{ (m.full_name or m.username)[0].upper() }}{% endif %}</div>
             {% endif %}
             <div>
+                {% if m.media_type == 'voice' %}
+                <div class="bubble-content">
+                    <div class="voice-player">
+                        <button class="voice-play-btn" onclick="playVoice(this,'{{ media_url(m.media_url) }}')">▶</button>
+                        <div class="voice-wave">
+                            <script>document.write(Array.from({length:20},()=>`<div class="voice-wave-bar" style="height:${4+Math.random()*20}px"></div>`).join(''))</script>
+                        </div>
+                        <span class="voice-dur">0:00</span>
+                    </div>
+                    {% if m.content %}<div style="margin-top:0.3rem;font-size:0.8rem;opacity:0.7">{{ m.content }}</div>{% endif %}
+                </div>
+                {% else %}
                 <div class="bubble-content">{{ m.content }}</div>
+                {% endif %}
                 <div class="msg-time">{{ time_ago(m.created_at) }}</div>
             </div>
         </div>
@@ -46,9 +82,15 @@
         <div style="text-align:center;color:var(--muted);padding:2rem;font-size:0.85rem">Konuşmayı başlatmak için bir mesaj gönder 👋</div>
         {% endif %}
     </div>
-    <div class="msg-input-row">
+    <div class="msg-input-row" id="msgRow">
+        <button class="voice-btn" id="voiceBtn" onclick="toggleRecording()" title="Sesli Mesaj">🎤</button>
         <textarea class="msg-input" id="msgInput" placeholder="Mesaj yaz..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-        <button class="send-btn" onclick="sendMsg()">↑</button>
+        <div class="recording-bar" id="recBar">
+            <div class="rec-dot"></div>
+            <span class="rec-timer" id="recTimer">0:00</span>
+            <button class="rec-cancel" onclick="cancelRecording()">✕ İptal</button>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">↑</button>
     </div>
 </div>
 {% endblock %}
@@ -58,6 +100,7 @@ const receiverId = {{ other.id }};
 const msgArea = document.getElementById('msgArea');
 msgArea.scrollTop = msgArea.scrollHeight;
 
+// ── TEXT MSG ─────────────────────────────────────────
 async function sendMsg() {
     const inp = document.getElementById('msgInput');
     const content = inp.value.trim();
@@ -68,12 +111,155 @@ async function sendMsg() {
     });
     if (res.ok) {
         inp.value = '';
-        const div = document.createElement('div');
-        div.className = 'msg-bubble mine';
-        div.innerHTML = `<div><div class="bubble-content">${content}</div><div class="msg-time">şimdi</div></div>`;
-        msgArea.appendChild(div);
-        msgArea.scrollTop = msgArea.scrollHeight;
+        appendBubble(content);
     }
 }
+
+function appendBubble(content, html) {
+    const div = document.createElement('div');
+    div.className = 'msg-bubble mine';
+    div.innerHTML = `<div><div class="bubble-content">${html||content}</div><div class="msg-time">şimdi</div></div>`;
+    msgArea.appendChild(div);
+    msgArea.scrollTop = msgArea.scrollHeight;
+}
+
+// ── VOICE MSG ────────────────────────────────────────
+let mediaRecorder = null;
+let audioChunks = [];
+let recInterval = null;
+let recSeconds = 0;
+
+async function toggleRecording() {
+    const btn = document.getElementById('voiceBtn');
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        // Stop → send
+        mediaRecorder.stop();
+        return;
+    }
+    // Start recording
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        // Prefer webm (supported by Chrome/Edge/Firefox), fallback to others
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
+                ? 'audio/ogg;codecs=opus' : '';
+        const opts = mimeType ? {mimeType} : {};
+        mediaRecorder = new MediaRecorder(stream, opts);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+            stream.getTracks().forEach(t => t.stop());
+            clearInterval(recInterval);
+            btn.classList.remove('recording');
+            document.getElementById('recBar').classList.remove('active');
+            document.getElementById('msgInput').style.display = '';
+            document.getElementById('sendBtn').style.display = '';
+
+            if (audioChunks.length === 0) return;
+
+            const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
+            const blob = new Blob(audioChunks, {type: mimeType || 'audio/webm'});
+            const file = new File([blob], `voice_${Date.now()}.${ext}`, {type: blob.type});
+
+            // Send via FormData
+            const fd = new FormData();
+            fd.append('receiver_id', receiverId);
+            fd.append('content', '');
+            fd.append('file', file);
+
+            const durSec = recSeconds;
+            recSeconds = 0;
+
+            try {
+                const r = await fetch('/messages/send', {method: 'POST', body: fd});
+                const d = await r.json();
+                if (d.success) {
+                    // Show voice bubble
+                    const durStr = Math.floor(durSec/60) + ':' + String(durSec%60).padStart(2,'0');
+                    const bars = Array.from({length:20},()=>`<div class="voice-wave-bar" style="height:${4+Math.random()*20}px"></div>`).join('');
+                    appendBubble('', `
+                        <div class="voice-player">
+                            <button class="voice-play-btn" onclick="playVoice(this,'${d.media_url}')">▶</button>
+                            <div class="voice-wave">${bars}</div>
+                            <span class="voice-dur">${durStr}</span>
+                        </div>
+                    `);
+                    showToast('Sesli mesaj gönderildi','success');
+                }
+            } catch(e) { showToast('Gönderim hatası','error'); }
+        };
+
+        mediaRecorder.start();
+        btn.classList.add('recording');
+        document.getElementById('recBar').classList.add('active');
+        document.getElementById('msgInput').style.display = 'none';
+        document.getElementById('sendBtn').style.display = 'none';
+
+        recSeconds = 0;
+        document.getElementById('recTimer').textContent = '0:00';
+        recInterval = setInterval(() => {
+            recSeconds++;
+            const m = Math.floor(recSeconds / 60);
+            const s = recSeconds % 60;
+            document.getElementById('recTimer').textContent = `${m}:${String(s).padStart(2,'0')}`;
+            if (recSeconds >= 120) { mediaRecorder.stop(); showToast('Maks 2 dakika','warning'); }
+        }, 1000);
+
+    } catch(e) {
+        showToast('Mikrofon erişimi reddedildi','error');
+    }
+}
+
+function cancelRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        audioChunks = []; // Discard
+        mediaRecorder.stop();
+    }
+}
+
+// ── VOICE PLAYER ─────────────────────────────────────
+let currentAudio = null;
+function playVoice(btn, url) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+
+    // If already playing this one — pause
+    if (btn.dataset.playing === 'true') {
+        btn.dataset.playing = 'false';
+        btn.textContent = '▶';
+        return;
+    }
+
+    // Reset all play buttons
+    document.querySelectorAll('.voice-play-btn').forEach(b => { b.textContent = '▶'; b.dataset.playing = 'false'; });
+
+    const audio = new Audio(url);
+    currentAudio = audio;
+    btn.textContent = '⏸';
+    btn.dataset.playing = 'true';
+
+    const durEl = btn.closest('.voice-player').querySelector('.voice-dur');
+
+    audio.onloadedmetadata = () => {
+        const d = Math.floor(audio.duration);
+        durEl.textContent = Math.floor(d/60) + ':' + String(d%60).padStart(2,'0');
+    };
+    audio.ontimeupdate = () => {
+        const c = Math.floor(audio.currentTime);
+        durEl.textContent = Math.floor(c/60) + ':' + String(c%60).padStart(2,'0');
+    };
+    audio.onended = () => {
+        btn.textContent = '▶';
+        btn.dataset.playing = 'false';
+        currentAudio = null;
+    };
+    audio.play();
+}
+
+// Auto-refresh messages every 5s
+setInterval(async () => {
+    // Simple: reload if new messages (can be optimized later)
+}, 5000);
 </script>
 {% endblock %}
